@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_CXX_FLAGS "-pthread -lpython2.7 -lboost_system")
 
 add_executable(Clear_DCT
-        src/CPU/main.cpp src/CPU/DCT_FILT.cpp src/CPU/ImageQuaolity.cpp)
+        src/CPU/main.cpp src/CPU/DCT_FILT.cpp src/CPU/ImageQuaolity.cpp src/DCT_Creator_Matrices.cpp)
 
 target_link_libraries(Clear_DCT ${OpenCV_LIBS})
 

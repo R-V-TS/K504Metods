@@ -16,7 +16,7 @@ int main(int args, char **argv) {
 
     cv::Mat image;
     //image = cv::imread(argv[1], 1);
-    image = cv::imread("../imset/baboon.png", 1);
+    image = cv::imread("../imset/Zoneplate.png", 1);
 
     if(!image.data) {
         return -1;
@@ -28,9 +28,9 @@ int main(int args, char **argv) {
     cv::imshow("image", image);
     cv::waitKey(0);
 
-    int *pixel_ride = new int[image.cols*image.rows*image.channels()];
+    char *pixel_ride = new char[image.cols*image.rows*image.channels()];
     int pixel_flag = 0;
-    cv::Mat RowClone;
+    cv::Mat Image_gray;
     cv::Mat A(image.size(), image.type());
 
     double time = 0.0;
@@ -38,13 +38,13 @@ int main(int args, char **argv) {
     uchar *data = image.data;
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols*image.channels(); j++) {
-            *(pixel_ride + pixel_flag) = (int) *(data + (image.cols*i*image.channels()) +  j);
+            *(pixel_ride + pixel_flag) = (char) *(data + (image.cols*i*image.channels()) +  j);
             pixel_flag++;
         }
     }
 
     unsigned int start_time = clock();
-    int *pixel_result = DCT_Filrer(pixel_ride, image.cols*image.channels(), image.rows, image.channels());
+    char *pixel_result = DCT_Filrer(pixel_ride, image.cols*image.channels(), image.rows, image.channels());
     unsigned int finish_time = clock();
     std::cout << "Time monothread = " << (float) (finish_time - start_time) / CLOCKS_PER_SEC << " s\n";
     time += (float) (finish_time - start_time) / CLOCKS_PER_SEC;
@@ -59,7 +59,7 @@ int main(int args, char **argv) {
             pixel_flag+=image.channels();
         }
 
-    cv::imwrite("result.png", A);
+    cv::imwrite("../imset/result.png", A);
     cv::namedWindow("filtered", cv::WINDOW_AUTOSIZE);
     cv::imshow("filtered", A);
     cv::waitKey(0);
