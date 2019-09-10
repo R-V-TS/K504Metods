@@ -19,7 +19,7 @@ int main(int args, char **argv) {
 
     cv::Mat image;
     //image = cv::imread(argv[1], 1);
-    image = cv::imread("Zoneplate.png", 1);
+    image = cv::imread("../imset/baboon.png", 1);
 
     if(!image.data) {
         return -1;
