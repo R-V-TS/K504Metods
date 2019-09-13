@@ -5,7 +5,7 @@
 
 #include "PrepareImage.h"
 #include "ImageQuaolity.h"
-#include "DCT_FILT.h"
+#include "DCT.h"
 #include <ctime>
 #include <opencv2/opencv.hpp>
 

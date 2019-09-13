@@ -15,7 +15,7 @@
  *========================================================*/
 
 #include "mex.h"
-#include "DCT_FILT.cpp"
+#include "DCT.cpp"
 
 void DCT_mex_filter(int cols, int rows, int channels, double* image_pixel, int window_size, double threshold, double* filtered_image)
 {

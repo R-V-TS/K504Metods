@@ -3,7 +3,7 @@
 #include <cuda.h>
 #include <driver_types.h>
 #include <ctime>
-#include "../DCT_Creator_Matrices.cpp"
+#include "../DCT_Creator_Matrices.h"
 
 __device__  void matrixMultiply(double *matrix1, double *matrix2, int window_size, double *result)
 {

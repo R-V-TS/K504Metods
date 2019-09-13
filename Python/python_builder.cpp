@@ -4,7 +4,7 @@
 // Do not include to CMake build target
 #import <Python.h>
 #import <iostream>
-#include "../src/CPU/DCT_FILT.cpp"
+#include "../src/CPU/DCT.cpp"
 
 double* image;
 int width;
