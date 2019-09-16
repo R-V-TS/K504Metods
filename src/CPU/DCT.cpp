@@ -4,10 +4,10 @@
 
 #include "DCT.h"
 #include <iostream>
+#include "../DCT_Matrices.h"
 
 
 namespace ImProcessing{
-
     float DCT_Creator2[2][2] = {
             {0.707106781186548,	0.707106781186548},
             {0.707106781186548,	-0.707106781186548}

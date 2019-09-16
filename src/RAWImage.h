@@ -17,8 +17,9 @@ namespace ImProcessing {
         RAWImage(std::string filename, ImagePixelType type);
         ~RAWImage();
         void show();
+        void save(std::string destination_folder);
         void ApplyDCT(int window_size, double threshold, bool device); // device == true for CPU variant
-        float* DCTCoefficients();
+        float* DCTCoefficients(bool device);
 
     private:
         // functions

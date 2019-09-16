@@ -10,6 +10,7 @@
 
 // Metods
 #include "CPU/DCT.h"
+#include "GPU/GPU_Functions.h"
 
 namespace ImProcessing
 {
@@ -73,7 +74,7 @@ namespace ImProcessing
     }
 
     void RAWImage::show() {
-        if(image != NULL)
+        if(image != NULL || (R != NULL && G != NULL && B != NULL))
         {
             cv::Mat image_show(width, height, CV_8UC3);
             switch (ImType)
@@ -97,53 +98,97 @@ namespace ImProcessing
         }
     }
 
-    void RAWImage::ApplyDCT(int window_size, double threshold, bool device) {
-        if(ImType != TYPE_3ARRAY)
+    void RAWImage::save(std::string destination_folder) {
+        if(image != NULL || (R != NULL && G != NULL && B != NULL))
         {
-            transfer2OtherType(TYPE_3ARRAY);
+            cv::Mat image_show(width, height, CV_8UC3);
+            switch (ImType)
+            {
+                case 1:
+                    for(int i = 0; i < width*height*channels; i++)
+                        image_show.data[i] = image[i];
+                    break;
+                case 4:
+                    for(int i = 0; i < width*height*channels; i+=3)
+                    {
+                        image_show.data[i] = B[i/channels];
+                        image_show.data[i+1] = G[i/channels];
+                        image_show.data[i+2] = R[i/channels];
+                    }
+                    break;
+            }
+            cv::imwrite(destination_folder + "result.png", image_show);
         }
-
-        float* DCT_ARRAY;
-        float max = 0;
-        DCT_ARRAY = DCT(B, width, height, window_size);
-        free(B);
-        for(int i = 0; i < width*height; i++)
-        {
-            if(DCT_ARRAY[i] > max) max = DCT_ARRAY[i];
-        }
-        for(int i = 0; i < width*height; i++)
-        {
-            if(abs(DCT_ARRAY[i]) < max*threshold) DCT_ARRAY[i] = 0;
-        }
-        B = ADCT(DCT_ARRAY, width, height, window_size);
-        free(DCT_ARRAY);
-        DCT_ARRAY = DCT(G, width, height, window_size);
-        free(G);
-        for(int i = 0; i < width*height; i++)
-        {
-            if(DCT_ARRAY[i] > max) max = DCT_ARRAY[i];
-        }
-        for(int i = 0; i < width*height; i++)
-        {
-            if(abs(DCT_ARRAY[i]) < max*threshold) DCT_ARRAY[i] = 0;
-        }
-        G = ADCT(DCT_ARRAY, width, height, window_size);
-        free(DCT_ARRAY);
-        DCT_ARRAY = DCT(R, width, height, window_size);
-        free(R);
-        for(int i = 0; i < width*height; i++)
-        {
-            if(DCT_ARRAY[i] > max) max = DCT_ARRAY[i];
-        }
-        for(int i = 0; i < width*height; i++)
-        {
-            if(abs(DCT_ARRAY[i]) < max*threshold) DCT_ARRAY[i] = 0;
-        }
-        R = ADCT(DCT_ARRAY, width, height, window_size);
-        free(DCT_ARRAY);
     }
 
-    float* RAWImage::DCTCoefficients() {
+    void RAWImage::ApplyDCT(int window_size, double threshold, bool device) {
+        if(device)
+        {
+            if(ImType != TYPE_3ARRAY)
+            {
+                transfer2OtherType(TYPE_3ARRAY);
+            }
+
+            float* DCT_ARRAY;
+            float max = 0;
+            DCT_ARRAY = DCT(B, width, height, window_size);
+            free(B);
+            for(int i = 0; i < width*height; i++)
+            {
+                if(DCT_ARRAY[i] > max) max = DCT_ARRAY[i];
+            }
+            for(int i = 0; i < width*height; i++)
+            {
+                if(abs(DCT_ARRAY[i]) < max*threshold) DCT_ARRAY[i] = 0;
+            }
+            B = ADCT(DCT_ARRAY, width, height, window_size);
+            free(DCT_ARRAY);
+            DCT_ARRAY = DCT(G, width, height, window_size);
+            free(G);
+            for(int i = 0; i < width*height; i++)
+            {
+                if(DCT_ARRAY[i] > max) max = DCT_ARRAY[i];
+            }
+            for(int i = 0; i < width*height; i++)
+            {
+                if(abs(DCT_ARRAY[i]) < max*threshold) DCT_ARRAY[i] = 0;
+            }
+            G = ADCT(DCT_ARRAY, width, height, window_size);
+            free(DCT_ARRAY);
+            DCT_ARRAY = DCT(R, width, height, window_size);
+            free(R);
+            for(int i = 0; i < width*height; i++)
+            {
+                if(DCT_ARRAY[i] > max) max = DCT_ARRAY[i];
+            }
+            for(int i = 0; i < width*height; i++)
+            {
+                if(abs(DCT_ARRAY[i]) < max*threshold) DCT_ARRAY[i] = 0;
+            }
+            R = ADCT(DCT_ARRAY, width, height, window_size);
+            free(DCT_ARRAY);
+        } else {
+            if(ImType != TYPE_BGR)
+            {
+                transfer2OtherType(TYPE_BGR);
+            }
+
+            float *DCT_ARRAY = DCT_GPU(image, width, height, channels, window_size);
+            float max = 0;
+            for(int i = 0; i < width*height; i++)
+            {
+                if(DCT_ARRAY[i] > max) max = DCT_ARRAY[i];
+            }
+            for(int i = 0; i < width*height; i++)
+            {
+                if(abs(DCT_ARRAY[i]) < max*threshold) DCT_ARRAY[i] = 0;
+            }
+            image = ADCT_GPU(DCT_ARRAY, width, height, channels, window_size);
+            free(DCT_ARRAY);
+        }
+    }
+
+    float* RAWImage::DCTCoefficients(bool device) {
         if(ImType != TYPE_3ARRAY)
         {
             transfer2OtherType(TYPE_3ARRAY);
@@ -164,7 +209,8 @@ namespace ImProcessing
         float* coefficients = new float[16];
         float* block = new float[window_size*window_size];
         float* DCT_ARRAY;
-        DCT_ARRAY = DCT(B, width, height, window_size);
+        if(device) DCT_ARRAY = DCT(B, width, height, window_size);
+        else DCT_ARRAY = DCT_GPU(B, width, height, 1, window_size);
         int z = 0;
 
         float slices_sum[4] = {0,0,0,0};

@@ -12,7 +12,9 @@ set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_CXX_FLAGS "-pthread -lpython2.7 -lboost_system")
 
 add_executable(ImageProj
-        src/main.cpp src/RAWImage.cpp src/CPU/DCT.cpp)
+        src/main.cpp src/RAWImage.cpp src/CPU/DCT.cpp src/GPU/GPU_DCT.cpp src/DCT_Matrices.h)
+
+set_source_files_properties(src/GPU/GPU_DCT.cpp PROPERTIES LANGUAGE CUDA)
 
 target_link_libraries(ImageProj ${OpenCV_LIBS})
 
@@ -28,13 +30,13 @@ set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_CXX_FLAGS "-pthread -lpython2.7 -lboost_system")
 
 add_executable(Clear_DCT
-        src/CPU/main.cpp src/CPU/DCT.cpp src/CPU/ImageQuaolity.cpp src/DCT_Creator_Matrices.h)
+        src/CPU/main.cpp src/CPU/DCT.cpp src/CPU/ImageQuaolity.cpp)
 
 target_link_libraries(Clear_DCT ${OpenCV_LIBS})
 
 
 
-#set(CMAKE_CUDA_COMPILER /usr/local/cuda-10.1/bin/nvcc)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-10.1/bin/nvcc)
 
 project(cuda_ CXX CUDA)
 
@@ -44,7 +46,7 @@ set(CMAKE_CXX_STANDARD 11)
 #file(GLOB app_stc "tiff-4.0.9/libtiff/*.c")
 
 add_executable(cuda_
-        src/GPU/matrixMultiply.cpp src/GPU/cuda_heder.h src/GPU/testDCT.cpp src/RAWImage.cpp)
+        src/GPU/matrixMultiply.cpp src/GPU/cuda_heder.h src/GPU/testDCT.cpp src/RAWImage.cpp src/GPU/GPU_Functions.h src/GPU/GPU_DCT.cpp src/GPU/GPU_DCT_stub.cpp)
 
 target_link_libraries(cuda_ ${OpenCV_LIBS})
 set_source_files_properties(src/GPU/matrixMultiply.cpp PROPERTIES LANGUAGE CUDA)

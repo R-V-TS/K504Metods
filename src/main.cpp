@@ -4,14 +4,19 @@
 
 #include <cstdlib>
 #include "RAWImage.h"
+#include <ctime>
+#include <fstream>
 
 int main(int args, char **argv)
 {
     bool file_folder = true; //true == file
     bool cpu_gpu = true; //true == cpu
-    bool show_image = true;
+    bool show_image = false;
+    bool save_image = false;
     std::string file = "";
     std::string folder = "";
+    std::string destination_folder = "";
+    std::string method = "DCT";
     int block_size = 8;
 
     for(int i = 1; i < args;) {
@@ -41,21 +46,49 @@ int main(int args, char **argv)
         } else if (std::string(argv[i]) == "-gpu"){
             cpu_gpu = false;
             i++;
-        } else{
+        } else if(std::string(argv[i]) == "-save"){
+            save_image = true;
+            destination_folder = argv[i+1];
+            i += 2;
+        } else if(std::string(argv[i]) == "-method"){
+            method = argv[i+1];
+            i += 2;
+        } else if(std::string(argv[i]) == "-show"){
+            show_image = true;
+            i++;
+        }
+        else{
             i++;
         }
     }
 
+    unsigned int time_start = clock();
     if(file_folder) {
         using namespace ImProcessing;
         RAWImage image(file, TYPE_BGR);
 
-        image.ApplyDCT(block_size, 0.012, true);
+        if(method == "DCT"){
+            image.ApplyDCT(block_size, 0.012, cpu_gpu);
+            if(show_image) image.show();
+            if(save_image) image.save(destination_folder);
+        }
 
-        //float *coeff = image.DCTCoefficients();
-        //for (int i = 0; i < 16; i++) printf("%f ", coeff[i]);
-        image.show();
+        if(method == "DCT_frequency")
+        {
+            float *coeff = image.DCTCoefficients(cpu_gpu);
+            for (int i = 0; i < 16; i++) printf("%f ", coeff[i]);
+            if(save_image) {
+                std::ofstream out;
+                out.open(destination_folder + "frequency.txt", std::ios_base::app);
+                for (int i = 0; i < 16; i++)
+                    out << coeff[i] << "/n";
+                out.close();
+            }
+        }
     }
+    unsigned int finish_time = clock();
+    printf("\nProgram works %f s\n", (float) (finish_time-time_start)/CLOCKS_PER_SEC);
+
 
     return 0;
 }
