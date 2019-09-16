@@ -130,6 +130,7 @@ char* DCT_Filrer(char *image_, int width_, int heigth_, int channels_)
     cudaFree(result_dev);
     cudaFree(image_dev);
     cudaFree(image_width_dev);
+
     cudaFree(threshold_dev);
     cudaFree(window_size_dev);
     cudaFree(DCT_creator_dev);
