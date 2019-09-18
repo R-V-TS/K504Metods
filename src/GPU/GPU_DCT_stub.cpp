@@ -6,12 +6,12 @@
 #include <cstdio>
 
 namespace ImProcessing {
-    float *DCT_GPU(char *image, int width, int height, int channels, int window_size) {
+    float *DCT_GPU(unsigned char *image, int width, int height, int channels, int window_size) {
         printf("GPU not support cuda\n");
         return nullptr;
     }
 
-    char *ADCT_GPU(float *DCT_array, int width, int height, int channels, int window_size) {
+    unsigned char *ADCT_GPU(float *DCT_array, int width, int height, int channels, int window_size) {
         printf("GPU not support cuda\n");
         return nullptr;
     }

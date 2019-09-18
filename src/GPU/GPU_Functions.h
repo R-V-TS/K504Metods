@@ -6,8 +6,8 @@
 #define CUDA__GPU_FUNCTIONS_H
 
 namespace ImProcessing {
-    float *DCT_GPU(char *image, int width, int height, int channels, int window_size);
-    char *ADCT_GPU(float* DCT_array, int width, int height, int channels, int window_size);
+    float *DCT_GPU(unsigned char *image, int width, int height, int channels, int window_size);
+    unsigned char *ADCT_GPU(float* DCT_array, int width, int height, int channels, int window_size);
 }
 
 #endif //CUDA__GPU_FUNCTIONS_H

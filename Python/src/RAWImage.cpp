@@ -5,6 +5,7 @@
 #include "RAWImage.h"
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 
 
 // Metods
@@ -92,6 +93,7 @@ namespace ImProcessing
     }
 
     void RAWImage::ApplyDCT(int window_size, double threshold) {
+        unsigned int time_start = clock();
         if(ImType != TYPE_3ARRAY)
         {
             transfer2OtherType(TYPE_3ARRAY);
@@ -135,9 +137,12 @@ namespace ImProcessing
         }
         R = ADCT(DCT_ARRAY, width, height, window_size);
         free(DCT_ARRAY);
+        unsigned int finish_time = clock();
+        printf("\nProgram works %f s\n", (float) (finish_time-time_start)/CLOCKS_PER_SEC);
     }
 
     void RAWImage::DCTCoefficients(float* DCT_Coff, int n) {
+        unsigned int time_start = clock();
         if(ImType != TYPE_3ARRAY)
         {
             transfer2OtherType(TYPE_3ARRAY);
@@ -157,76 +162,92 @@ namespace ImProcessing
         float* EST = new float[(width/8)*(height/8)*4];
         float* block = new float[window_size*window_size];
         float* DCT_ARRAY;
-        DCT_ARRAY = DCT(B, width, height, window_size);
         int z = 0;
 
-        float slices_sum[4] = {0,0,0,0};
-        float mean[4] = {0,0,0,0};
-        float variance[4] = {0,0,0,0};
-        float skeweness[4] = {0,0,0,0};
-        float kurtosis[4] = {0,0,0,0};
+        double slices_sum[4] = {0,0,0,0};
+        double mean = 0;
+        double variance = 0;
+        double skeweness = 0;
+        double kurtosis = 0;
         int count = 0;
-        float fulldct = 0;
+        double fulldct = 0;
         int pixel_p = 0;
-        for(int i = 0; i < height; i+=window_size)
-        {
-            for(int j = 0; j < width; j+=window_size)
-            {
-                getImageBlock(DCT_ARRAY, i, j, width, window_size, block);
-                block[0] = 0;
 
-                for(int l = 0; l < window_size; l++) {
-                    for (int k = 0; k < window_size; k++) {
-                        fulldct += block[(l * window_size) + k];
-                        slices_sum[matrix_flag[l][k]-1] += block[(l * window_size) + k];
+        for(int num_arr = 0; num_arr < channels; num_arr++)
+        {
+            pixel_p = 0;
+            if(num_arr == 0) DCT_ARRAY = DCT(B, width, height, window_size);
+            else if(num_arr == 1) DCT_ARRAY = DCT(G, width, height, window_size);
+            else if(num_arr == 2) DCT_ARRAY = DCT(R, width, height, window_size);
+
+            for(int i = 0; i < height; i+=window_size)
+            {
+                for(int j = 0; j < width; j+=window_size)
+                {
+                    fulldct = 0;
+                    getImageBlock(DCT_ARRAY, i, j, width, window_size, block);
+                    block[0] = 0;
+
+                    for(int l = 0; l < window_size; l++) {
+                        for (int k = 0; k < window_size; k++) {
+                            block[(l*window_size) + k] = block[(l*window_size) + k] * block[(l*window_size) + k];
+                            fulldct += block[(l * window_size) + k];
+                            slices_sum[matrix_flag[l][k]-1] += block[(l * window_size) + k];
+                        }
+                    }
+
+                    for(int l = 0; l < 4; l++) {
+                        slices_sum[l] /= fulldct;
+                        EST[pixel_p] = slices_sum[l];
+                        pixel_p++;
+                        slices_sum[l] = 0;
+                    }
+                }
+            }
+
+            for(int l = 0; l < 4; l++)
+            {
+                mean = 0;
+                pixel_p = l;
+                for(int i = 0; i < height/8; i++)
+                {
+                    for(int j = 0; j < width/8; j++)
+                    {
+                        mean += EST[pixel_p];
+                        pixel_p += 4;
+                        count++;
+                    }
+                }
+                count = width*height;
+                mean /= count;
+
+                pixel_p = l;
+                variance = 0;
+                skeweness = 0;
+                kurtosis = 0;
+                for(int i = 0; i < height/8; i++)
+                {
+                    for(int j = 0; j < width/8; j++)
+                    {
+                        variance += pow((EST[pixel_p] - mean), 2);
+                        skeweness += pow((EST[pixel_p]-mean), 3);
+                        kurtosis += pow((EST[pixel_p]-mean), 4);
+                        pixel_p += 4;
                     }
                 }
 
-                for(int l = 0; l < 4; l++) {
-                    slices_sum[l] /= fulldct;
-                    EST[pixel_p] = slices_sum[l];
-                    pixel_p++;
-                }
-
-                count++;
+                skeweness = (skeweness/count)/pow(sqrt(variance/count), 3);
+                kurtosis = (kurtosis/count)/pow(variance/count, 2);
+                variance = variance/(count-1);
+                DCT_Coff[z] = mean;
+                DCT_Coff[z+1] = variance;
+                DCT_Coff[z+2] = skeweness;
+                DCT_Coff[z+3] = kurtosis;
+                z += 4;
             }
         }
-
-        for(int l = 0; l < 4; l++)
-        {
-            pixel_p = l;
-            for(int i = 0; i < height/8; i++)
-            {
-                for(int j = 0; j < width/8; j++)
-                {
-                    mean[l] += EST[pixel_p];
-                    pixel_p += 4;
-                }
-            }
-
-            mean[l] /= count;
-
-            pixel_p = 0;
-            for(int i = 0; i < height/8; i++)
-            {
-                for(int j = 0; j < width/8; j++)
-                {
-                    variance[l] += pow((EST[pixel_p] - mean[l]), 2);
-                    skeweness[l] += pow((EST[pixel_p]-mean[l]), 3);
-                    kurtosis[l] += pow((EST[pixel_p]-mean[l]), 4);
-                    pixel_p += 4;
-                }
-            }
-
-            skeweness[l] = (skeweness[l]/count)/pow(sqrt(variance[l]/count), 3);
-            kurtosis[l] = (kurtosis[l]/count)/pow(variance[l]/count, 2);
-            variance[l] = variance[l]/(count-1);
-            DCT_Coff[z] = mean[l];
-            DCT_Coff[z+1] = variance[l];
-            DCT_Coff[z+2] = skeweness[l];
-            DCT_Coff[z+3] = kurtosis[l];
-            z += 4;
-        }
+        unsigned int finish_time = clock();
+        printf("\nProgram works %f s\n", (float) (finish_time-time_start)/CLOCKS_PER_SEC);
     }
 
     void RAWImage::transfer2OtherType(ImProcessing::ImagePixelType type) {

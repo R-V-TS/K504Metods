@@ -18,7 +18,7 @@ namespace ImProcessing {
             }
     }
 
-    __global__ void gDCT(char *image, int *image_width, int *pixel_delay, float *DCT_Creator, float *DCT_Creator_T, int *window_size, float *result) {
+    __global__ void gDCT(unsigned char *image, int *image_width, int *pixel_delay, float *DCT_Creator, float *DCT_Creator_T, int *window_size, float *result) {
         int x = (blockIdx.x) * (*window_size) * (*pixel_delay) + (threadIdx.x);
         int y = (blockIdx.y) * (*window_size);
 
@@ -47,7 +47,7 @@ namespace ImProcessing {
     }
 
 
-    __global__ void gADCT(float *image, int *image_width, int *pixel_delay, float *DCT_Creator, float *DCT_Creator_T, int *window_size, char *result) {
+    __global__ void gADCT(float *image, int *image_width, int *pixel_delay, float *DCT_Creator, float *DCT_Creator_T, int *window_size, unsigned char *result) {
         int x = (blockIdx.x) * (*window_size) * (*pixel_delay) + (threadIdx.x);
         int y = (blockIdx.y) * (*window_size);
 
@@ -76,10 +76,10 @@ namespace ImProcessing {
         free(image_block);
     }
 
-    float *DCT_GPU(char *image, int width, int height, int channels, int window_size) {
+    float *DCT_GPU(unsigned char *image, int width, int height, int channels, int window_size) {
         float *result = new float[width * height * channels];
 
-        char *image_dev;
+        unsigned char *image_dev;
         float *DCT_creator_dev;
         float *DCT_creator_T_dev;
         float *result_dev;
@@ -88,7 +88,7 @@ namespace ImProcessing {
         int *pixel_delay_dev;
 
 
-        cudaMalloc((void **) &image_dev, sizeof(char) * width * height * channels); // 256 is image size
+        cudaMalloc((void **) &image_dev, sizeof(unsigned char) * width * height * channels); // 256 is image size
         cudaMalloc((void **) &DCT_creator_dev, sizeof(float) * window_size * window_size);
         cudaMalloc((void **) &DCT_creator_T_dev, sizeof(float) * window_size * window_size);
         cudaMalloc((void **) &window_size_dev, sizeof(int));
@@ -96,7 +96,7 @@ namespace ImProcessing {
         cudaMalloc((void **) &pixel_delay_dev, sizeof(int));
         cudaMalloc((void **) &result_dev, sizeof(float) * width * height * channels);
 
-        cudaMemcpyAsync(image_dev, image, sizeof(char) * width * height * channels, cudaMemcpyHostToDevice);   //copy image to videomemory
+        cudaMemcpyAsync(image_dev, image, sizeof(unsigned char) * width * height * channels, cudaMemcpyHostToDevice);   //copy image to videomemory
         cudaMemcpy(window_size_dev, &window_size, sizeof(int), cudaMemcpyHostToDevice);
         cudaMemcpy(image_width_dev, &width, sizeof(int), cudaMemcpyHostToDevice);
         cudaMemcpy(pixel_delay_dev, &channels, sizeof(int), cudaMemcpyHostToDevice);
@@ -150,13 +150,13 @@ namespace ImProcessing {
         return result;
     }
 
-    char *ADCT_GPU(float *image, int width, int height, int channels, int window_size) {
-        char *result = new char[width * height * channels];
+    unsigned char *ADCT_GPU(float *image, int width, int height, int channels, int window_size) {
+        unsigned char *result = new unsigned char[width * height * channels];
 
         float *image_dev;
         float *DCT_creator_dev;
         float *DCT_creator_T_dev;
-        char *result_dev;
+        unsigned char *result_dev;
         int *window_size_dev;
         int *image_width_dev;
         int *pixel_delay_dev;
@@ -168,7 +168,7 @@ namespace ImProcessing {
         cudaMalloc((void **) &window_size_dev, sizeof(int));
         cudaMalloc((void **) &image_width_dev, sizeof(int));
         cudaMalloc((void **) &pixel_delay_dev, sizeof(int));
-        cudaMalloc((void **) &result_dev, sizeof(char) * width * height * channels);
+        cudaMalloc((void **) &result_dev, sizeof(unsigned char) * width * height * channels);
 
         cudaMemcpyAsync(image_dev, image, sizeof(float) * width * height * channels,
                         cudaMemcpyHostToDevice);   //copy image to videomemory
@@ -214,7 +214,7 @@ namespace ImProcessing {
         gADCT << < grid, channels >> >
                          (image_dev, image_width_dev, pixel_delay_dev, DCT_creator_dev, DCT_creator_T_dev, window_size_dev, result_dev);
 
-        cudaMemcpyAsync(result, result_dev, width * height * channels * sizeof(char), cudaMemcpyDeviceToHost);
+        cudaMemcpyAsync(result, result_dev, width * height * channels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
 
         cudaFree(result_dev);
         cudaFree(image_dev);

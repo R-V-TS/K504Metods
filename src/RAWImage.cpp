@@ -21,13 +21,13 @@ namespace ImProcessing
             PrintError("Path don't have image!");
             return;
         } else{
-            char *image_pxl = (char*)imCV.data;
+            unsigned char *image_pxl = (unsigned char*)imCV.data;
             createImageArray(image_pxl, imCV.cols, imCV.rows, type);
         }
 
     }
 
-    RAWImage::RAWImage(char *image_pixel, int image_width, int image_height, ImProcessing::ImagePixelType type) {
+    RAWImage::RAWImage(unsigned char *image_pixel, int image_width, int image_height, ImProcessing::ImagePixelType type) {
         createImageArray(image_pixel, image_width, image_height, type);
     }
 
@@ -37,12 +37,12 @@ namespace ImProcessing
         height = 0;
     }
 
-    void RAWImage::createImageArray(char *image_pixel, int image_width, int image_height,
+    void RAWImage::createImageArray(unsigned char *image_pixel, int image_width, int image_height,
                                     ImProcessing::ImagePixelType type) {
         switch(type)
         {
             case 1:
-                image = new char[image_height*image_width*3];
+                image = new unsigned char[image_height*image_width*3];
                 for(int i = 0; i < image_width*image_height*3; i++){
                     image[i] = image_pixel[i];
                 }
@@ -57,9 +57,9 @@ namespace ImProcessing
                 height = image_height;
                 channels = 3;
                 ImType = type;
-                B = new char[width*height];
-                G = new char[width*height];
-                R = new char[width*height];
+                B = new unsigned char[width*height];
+                G = new unsigned char[width*height];
+                R = new unsigned char[width*height];
                 int p = 0;
                 for(int i = 0; i < image_width*image_height*channels; i+=channels)
                 {
@@ -213,13 +213,13 @@ namespace ImProcessing
         else DCT_ARRAY = DCT_GPU(B, width, height, 1, window_size);
         int z = 0;
 
-        float slices_sum[4] = {0,0,0,0};
-        float mean = 0;
-        float variance = 0;
-        float skeweness = 0;
-        float kurtosis = 0;
+        double slices_sum[4] = {0,0,0,0};
+        double mean = 0;
+        double variance = 0;
+        double skeweness = 0;
+        double kurtosis = 0;
         int count = 0;
-        float fulldct = 0;
+        double fulldct = 0;
         int pixel_p = 0;
         for(int i = 0; i < height; i+=window_size)
         {
@@ -231,12 +231,10 @@ namespace ImProcessing
 
                 for(int l = 0; l < window_size; l++) {
                     for (int k = 0; k < window_size; k++) {
-                        printf("%f ", block[(l*window_size) + k]);
                         block[(l*window_size) + k] = block[(l*window_size) + k] * block[(l*window_size) + k];
                         fulldct += block[(l * window_size) + k];
                         slices_sum[matrix_flag[l][k]-1] += block[(l * window_size) + k];
                     }
-                    printf("\n");
                 }
 
                 for(int l = 0; l < 4; l++) {
@@ -252,7 +250,6 @@ namespace ImProcessing
         {
             mean = 0;
             pixel_p = l;
-            count = 0;
             for(int i = 0; i < height/8; i++)
             {
                 for(int j = 0; j < width/8; j++)
@@ -263,7 +260,8 @@ namespace ImProcessing
                     count++;
                 }
             }
-
+            printf("%i ", count);
+            count = width*height;
             mean /= count;
 
             pixel_p = l;
@@ -299,9 +297,9 @@ namespace ImProcessing
         {
             if(ImType == TYPE_BGR && type == TYPE_3ARRAY)
             {
-                B = new char[width*height];
-                G = new char[width*height];
-                R = new char[width*height];
+                B = new unsigned char[width*height];
+                G = new unsigned char[width*height];
+                R = new unsigned char[width*height];
                 int p = 0;
                 for(int i = 0; i < width*height*channels; i+=channels, p++)
                 {
@@ -313,7 +311,7 @@ namespace ImProcessing
             }
             else if(ImType == TYPE_3ARRAY && type == TYPE_BGR)
             {
-                image = new char[width*height*channels];
+                image = new unsigned char[width*height*channels];
                 int p = 0;
                 for(int i = 0; i < width*height*channels; i+=channels, p++)
                 {

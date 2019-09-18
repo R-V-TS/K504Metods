@@ -48,7 +48,7 @@ namespace ImProcessing{
             {0.3536, 0.4157, 0.1913, -0.0975, -0.3536, -0.4904, -0.4619, -0.2778},
             {0.3536, 0.2778, -0.1913, -0.4904, -0.3536, 0.0975, 0.4619, 0.4157},
             {0.3536, 0.0975, -0.4619, -0.2778, 0.3536, 0.4157, -0.1913, -0.4904},
-            {0.3536, -0.0975, -0.4619, 0.2778, 0.3536, -0.4157, -0.1913, 0.4704},
+            {0.3536, -0.0975, -0.4619, 0.2778, 0.3536, -0.4157, -0.1913, 0.4904},
             {0.3536, -0.2778, -0.1913, 0.4904, -0.3536, -0.0975, 0.4619, -0.4157},
             {0.3536, -0.4157, 0.1913, 0.0975, -0.3536, 0.4904, -0.4619, 0.2778},
             {0.3536, -0.4904, 0.4619, -0.4157, 0.3536, -0.2778, 0.1913, -0.0975}
@@ -174,10 +174,10 @@ namespace ImProcessing{
             }
     }
 
-    void getImageBlock(char* image, int i_, int j_, int image_width, int window_size, float* block) {
+    void getImageBlock(unsigned char* image, int i_, int j_, int image_width, int window_size, float* block) {
         for (int i = i_; i < window_size+i_; i++)
             for (int j = j_; j < (window_size)+j_; j++) {
-                block[window_size * (i-i_) + (j - j_)] = ((float) image[(image_width * (i)) + (j)]) + 128;
+                block[window_size * (i-i_) + (j - j_)] = ((float) image[(image_width * (i)) + (j)]);
             }
     }
 
@@ -196,7 +196,7 @@ namespace ImProcessing{
             return zn;
     }
 
-    float* DCT(char* image_, int width_, int height_, int wind_size_)
+    float* DCT(unsigned char* image_, int width_, int height_, int wind_size_)
     {
         float *DCT_creator_mtx;
         float *DCT_creator_mtx_T;
@@ -241,7 +241,7 @@ namespace ImProcessing{
         return im_temp;
     }
 
-    char* ADCT(float* image_dct, int width_, int height_, int wind_size_)
+    unsigned char* ADCT(float* image_dct, int width_, int height_, int wind_size_)
     {
         float *DCT_creator_mtx;
         float *DCT_creator_mtx_T;
@@ -270,7 +270,7 @@ namespace ImProcessing{
 
         float *block = new float[wind_size_*wind_size_];
         float *temp = new float[wind_size_*wind_size_];
-        char *im_temp = new char[width_ * height_];
+        unsigned char *im_temp = new unsigned char[width_ * height_];
 
         for (int i = 0; i < height_; i += wind_size_) {
             for (int j = 0; j < width_; j += wind_size_) {
@@ -280,7 +280,7 @@ namespace ImProcessing{
 
                 for (int l = i; l < wind_size_ + i; l++) // Put DCT block to filtered
                     for (int t = j; t < wind_size_ + j; t++) {
-                        im_temp[width_ * l + t] = ((char) block[wind_size_ * (l - i) + (t - j)]) + 128;
+                        im_temp[width_ * l + t] = ((unsigned char) block[wind_size_ * (l - i) + (t - j)]);
                     }
             }
         }
