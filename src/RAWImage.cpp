@@ -214,10 +214,10 @@ namespace ImProcessing
         int z = 0;
 
         float slices_sum[4] = {0,0,0,0};
-        float mean[4] = {0,0,0,0};
-        float variance[4] = {0,0,0,0};
-        float skeweness[4] = {0,0,0,0};
-        float kurtosis[4] = {0,0,0,0};
+        float mean = 0;
+        float variance = 0;
+        float skeweness = 0;
+        float kurtosis = 0;
         int count = 0;
         float fulldct = 0;
         int pixel_p = 0;
@@ -225,59 +225,69 @@ namespace ImProcessing
         {
             for(int j = 0; j < width; j+=window_size)
             {
+                fulldct = 0;
                 getImageBlock(DCT_ARRAY, i, j, width, window_size, block);
                 block[0] = 0;
 
                 for(int l = 0; l < window_size; l++) {
                     for (int k = 0; k < window_size; k++) {
+                        printf("%f ", block[(l*window_size) + k]);
+                        block[(l*window_size) + k] = block[(l*window_size) + k] * block[(l*window_size) + k];
                         fulldct += block[(l * window_size) + k];
                         slices_sum[matrix_flag[l][k]-1] += block[(l * window_size) + k];
                     }
+                    printf("\n");
                 }
 
                 for(int l = 0; l < 4; l++) {
                     slices_sum[l] /= fulldct;
                     EST[pixel_p] = slices_sum[l];
                     pixel_p++;
+                    slices_sum[l] = 0;
                 }
-
-                count++;
             }
         }
 
         for(int l = 0; l < 4; l++)
         {
-            pixel_p = 0;
+            mean = 0;
+            pixel_p = l;
+            count = 0;
             for(int i = 0; i < height/8; i++)
             {
                 for(int j = 0; j < width/8; j++)
                 {
-                    mean[l] += EST[pixel_p];
+                    mean += EST[pixel_p];
+                    printf("%f \n", EST[pixel_p]);
                     pixel_p += 4;
+                    count++;
                 }
             }
 
-            mean[l] /= count;
+            mean /= count;
 
-            pixel_p = 0;
+            pixel_p = l;
+            variance = 0;
+            skeweness = 0;
+            kurtosis = 0;
             for(int i = 0; i < height/8; i++)
             {
                 for(int j = 0; j < width/8; j++)
                 {
-                    variance[l] += pow((EST[pixel_p] - mean[l]), 2);
-                    skeweness[l] += pow((EST[pixel_p]-mean[l]), 3);
-                    kurtosis[l] += pow((EST[pixel_p]-mean[l]), 4);
+                    variance += pow((EST[pixel_p] - mean), 2);
+                    skeweness += pow((EST[pixel_p]-mean), 3);
+                    kurtosis += pow((EST[pixel_p]-mean), 4);
                     pixel_p += 4;
                 }
             }
 
-            skeweness[l] = (skeweness[l]/count)/pow(sqrt(variance[l]/count), 3);
-            kurtosis[l] = (kurtosis[l]/count)/pow(variance[l]/count, 2);
-            variance[l] = variance[l]/(count-1);
-            coefficients[z] = mean[l];
-            coefficients[z+1] = variance[l];
-            coefficients[z+2] = skeweness[l];
-            coefficients[z+3] = kurtosis[l];
+            skeweness = (skeweness/count)/pow(sqrt(variance/count), 3);
+            kurtosis = (kurtosis/count)/pow(variance/count, 2);
+            variance = variance/(count-1);
+            coefficients[z] = mean;
+            coefficients[z+1] = variance;
+            coefficients[z+2] = skeweness;
+            coefficients[z+3] = kurtosis;
             z += 4;
         }
 
