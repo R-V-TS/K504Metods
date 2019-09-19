@@ -126,6 +126,12 @@ class RAWImage(_object):
 
     def printImage(self):
         return _K504Metods.RAWImage_printImage(self)
+
+    def AddNoise(self, mu, sigma):
+        return _K504Metods.RAWImage_AddNoise(self, mu, sigma)
+
+    def printImageCharacteristics(self):
+        return _K504Metods.RAWImage_printImageCharacteristics(self)
 RAWImage_swigregister = _K504Metods.RAWImage_swigregister
 RAWImage_swigregister(RAWImage)
 

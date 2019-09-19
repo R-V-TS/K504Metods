@@ -7,6 +7,8 @@
 #include <opencv2/opencv.hpp>
 #include <cmath>
 #include <vector>
+#include <random>
+#include "CPU/ImageQuaolity.h"
 
 // Metods
 #include "CPU/DCT.h"
@@ -43,8 +45,10 @@ namespace ImProcessing
         {
             case 1:
                 image = new unsigned char[image_height*image_width*3];
+                original_image = new unsigned char[image_height*image_width*3];
                 for(int i = 0; i < image_width*image_height*3; i++){
                     image[i] = image_pixel[i];
+                    original_image[i] = image[i];
                 }
                 width = image_width;
                 height = image_height;
@@ -60,12 +64,16 @@ namespace ImProcessing
                 B = new unsigned char[width*height];
                 G = new unsigned char[width*height];
                 R = new unsigned char[width*height];
+                original_image = new unsigned char[image_height*image_width*3];
                 int p = 0;
                 for(int i = 0; i < image_width*image_height*channels; i+=channels)
                 {
                     B[p] = image_pixel[i];
                     G[p] = image_pixel[i+1];
                     R[p] = image_pixel[i+2];
+                    original_image[i] = B[p];
+                    original_image[i+1] = G[p];
+                    original_image[i+2] = R[p];
                     p++;
                 }
                 //free(image_pixel);
@@ -193,6 +201,7 @@ namespace ImProcessing
         {
             transfer2OtherType(TYPE_3ARRAY);
         }
+
         int window_size = 8;
         int matrix_flag[8][8] = {
                 {0,  1,  1,  1,  1,  2,  2,  2},
@@ -255,12 +264,10 @@ namespace ImProcessing
                 for(int j = 0; j < width/8; j++)
                 {
                     mean += EST[pixel_p];
-                    printf("%f \n", EST[pixel_p]);
                     pixel_p += 4;
                     count++;
                 }
             }
-            printf("%i ", count);
             count = width*height;
             mean /= count;
 
@@ -288,8 +295,35 @@ namespace ImProcessing
             coefficients[z+3] = kurtosis;
             z += 4;
         }
-
+        free(EST);
         return coefficients;
+    }
+
+    void RAWImage::AddNoise(float mu, float sigma) {
+        std::default_random_engine generator; //Random generator engine
+        std::normal_distribution<float> distribution(mu, sigma); //distribution vector
+
+        if(ImType != TYPE_3ARRAY)
+            transfer2OtherType(TYPE_3ARRAY);
+
+        for(int i = 0; i < height; i++)
+            for(int j = 0; j < width; j++)
+            {
+                B[(i * width) + j] += distribution(generator);
+                G[(i * width) + j] += distribution(generator);
+                R[(i * width) + j] += distribution(generator);
+            }
+    }
+
+    void RAWImage::printImageCharacteristics(){
+        if(ImType != TYPE_BGR)
+            transfer2OtherType(TYPE_BGR);
+
+        float* PSNR_ = PSNR(original_image, image, width, height, channels);
+
+        for(int i = 0; i < 3; i++)
+            printf("%f ", PSNR_[i]);
+        printf("\n");
     }
 
     void RAWImage::transfer2OtherType(ImProcessing::ImagePixelType type) {

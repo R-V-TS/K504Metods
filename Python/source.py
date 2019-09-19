@@ -2,14 +2,15 @@ import numpy as np
 from PIL import Image
 import K504Metods
 import matplotlib.pyplot as plt
+from ImQuaolity import PSNR
 
-directory = "tampere17/color/"
+directory = "../Images/tampere17/color/"
 
 result_ = np.zeros((300, 1))
 mu = 0
 sigma = 5
 
-for z in range(0, 300):
+for z in range(0, 1):
     if (z + 1 < 10):
         im_name = 't00' + str(z + 1) + '.png'
     elif (z + 1 < 100):
@@ -20,21 +21,22 @@ for z in range(0, 300):
     im = Image.open(directory+im_name)
 
     im_array = np.array(im)
-    noise = np.random.normal(mu, sigma, im_array.shape)
-    im_array = im_array + noise
-    imm = Image.fromarray(im_array.astype(np.uint8))
-    imm.show()
-
-
-    image = K504Metods.RAWImage(im_array.astype(np.short), K504Metods.TYPE_BGR)
+    image = K504Metods.RAWImage(im_array.astype(np.uint8), K504Metods.TYPE_BGR)
     #image.printImage()
-    coff = image.DCTCoefficients(16*3)
+    #coff = image.DCTCoefficients(16*3)
+    image.AddNoise(0, 5)
+    i = image.getImage(512 * 512 * 3)
+    i = i.reshape((512, 512, 3))
+    im = Image.fromarray(i.astype(np.uint8))
+    im.show()
+    image.printImageCharacteristics()
+    print(PSNR(im_array, i))
 
-    image.ApplyDCT(8, 0.012)
+    image.ApplyDCT(8, 0.12)
 
-    coff = image.DCTCoefficients(16*3)
-    i = image.getImage(512*512*3)
-    i = i.reshape((512,512,3))
+    image.printImageCharacteristics()
 
-    imm = Image.fromarray(i.astype(np.uint8))
-    imm.show()
+    i = image.getImage(512 * 512 * 3)
+    i = i.reshape((512, 512, 3))
+    im = Image.fromarray(i.astype(np.uint8))
+    im.show()

@@ -1,8 +1,9 @@
 #include <cmath>
+#include <cstdint>
 #include "ImageQuaolity.h"
 
 namespace ImProcessing{
-    float* MSE(unsigned char* P_image, unsigned char* Q_image, int width, int height, int channels){
+    float* MSE(uint8_t* P_image, uint8_t* Q_image, int width, int height, int channels){
         float* MSE_res = new float[channels];
         for(int ch = 0; ch < channels; ch++)
         {
@@ -18,12 +19,12 @@ namespace ImProcessing{
         return MSE_res;
     }
 
-    float* PSNR(unsigned char* P_image, unsigned char* Q_image, int width, int height, int channels){
+    float* PSNR(uint8_t* P_image, uint8_t* Q_image, int width, int height, int channels){
         float* PSNR_res = new float[channels];
         float* MSE_im = MSE(P_image, Q_image, width, height, channels);
         for(int ch = 0; ch < channels; ch++)
         {
-            unsigned char max = 0;
+            uint8_t max = 0;
             for(int i = 0; i < height; i++)
                 for(int j = ch; j < width; j += channels)
                 {

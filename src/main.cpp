@@ -85,6 +85,20 @@ int main(int args, char **argv)
                 out.close();
             }
         }
+
+        if(method == "Test")
+        {
+            image.AddNoise(0, 5);
+            float* coff = image.DCTCoefficients(cpu_gpu);
+            for (int i = 0; i < 16; i++) printf("%f ", coff[i]);
+            printf("\n");
+            image.printImageCharacteristics();
+            image.ApplyDCT(8,0.012,cpu_gpu);
+            float* coeff = image.DCTCoefficients(cpu_gpu);
+            for (int i = 0; i < 16; i++) printf("%f ", coeff[i]);
+            printf("\n");
+            image.printImageCharacteristics();
+        }
     }
     unsigned int finish_time = clock();
     printf("\nProgram works %f s\n", (float) (finish_time-time_start)/CLOCKS_PER_SEC);

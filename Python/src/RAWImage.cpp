@@ -6,7 +6,8 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
-
+#include <random>
+#include "ImageQuaolity.h"
 
 // Metods
 #include "DCT.h"
@@ -15,15 +16,17 @@ using namespace std;
 
 namespace ImProcessing
 {
-    RAWImage::RAWImage(short* pixel_array, int image_width, int image_height, int channels_, ImagePixelType type) {
+    RAWImage::RAWImage(uint8_t* pixel_array, int image_width, int image_height, int channels_, ImagePixelType type) {
         ImType = type;
         switch(ImType) {
             case TYPE_BGR: {
                 int t = 0;
-                image = new short[image_height * image_width * channels_];
+                image = new uint8_t[image_height * image_width * channels_];
+                original_image = new uint8_t[image_height*image_width*3];
                 for (int i = 0; i < image_height; i++) {
                     for (int j = 0; j < image_width * channels_; j++) {
                         image[t] = pixel_array[(i*image_width*channels_) + j];
+                        original_image[i] = image[i];
                         t++;
                     }
                 }
@@ -37,15 +40,19 @@ namespace ImProcessing
                 width = image_width;
                 height = image_height;
                 channels = channels_;
-                B = new short[width * height];
-                G = new short[width * height];
-                R = new short[width * height];
+                B = new uint8_t[width * height];
+                G = new uint8_t[width * height];
+                R = new uint8_t[width * height];
+                original_image = new uint8_t[image_height*image_width*3];
                 int p = 0;
                 for (int i = 0; i < image_height; i++) {
                     for (int j = 0; j < image_width * channels_; j += channels_) {
                         B[p] = pixel_array[(i*image_width*channels_) + j];
                         G[p] = pixel_array[(i*image_width*channels_) + j + 1];
                         R[p] = pixel_array[(i*image_width*channels_) + j + 2];
+                        original_image[i] = B[p];
+                        original_image[i+1] = G[p];
+                        original_image[i+2] = R[p];
                         p++;
                     }
                 }
@@ -76,7 +83,7 @@ namespace ImProcessing
         }
     };
     
-    void RAWImage::getImage(short* pixel_array, int n){
+    void RAWImage::getImage(uint8_t* pixel_array, int n){
         if(ImType != TYPE_BGR)
         {
             transfer2OtherType(TYPE_BGR);
@@ -250,14 +257,41 @@ namespace ImProcessing
         printf("\nProgram works %f s\n", (float) (finish_time-time_start)/CLOCKS_PER_SEC);
     }
 
+    void RAWImage::AddNoise(float mu, float sigma) {
+        std::default_random_engine generator; //Random generator engine
+        std::normal_distribution<float> distribution(mu, sigma); //distribution vector
+
+        if(ImType != TYPE_3ARRAY)
+            transfer2OtherType(TYPE_3ARRAY);
+
+        for(int i = 0; i < height; i++)
+            for(int j = 0; j < width; j++)
+            {
+                B[(i * width) + j] += distribution(generator);
+                G[(i * width) + j] += distribution(generator);
+                R[(i * width) + j] += distribution(generator);
+            }
+    }
+
+    void RAWImage::printImageCharacteristics(){
+        if(ImType != TYPE_BGR)
+            transfer2OtherType(TYPE_BGR);
+
+        float* PSNR_ = PSNR(original_image, image, width, height, channels);
+
+        for(int i = 0; i < 3; i++)
+            printf("%f ", PSNR_[i]);
+        printf("\n");
+    }
+
     void RAWImage::transfer2OtherType(ImProcessing::ImagePixelType type) {
         if(ImType != type)
         {
             if(ImType == TYPE_BGR && type == TYPE_3ARRAY)
             {
-                B = new short[width*height];
-                G = new short[width*height];
-                R = new short[width*height];
+                B = new uint8_t[width*height];
+                G = new uint8_t[width*height];
+                R = new uint8_t[width*height];
                 int p = 0;
                 for(int i = 0; i < width*height*channels; i+=channels, p++)
                 {
@@ -269,7 +303,7 @@ namespace ImProcessing
             }
             else if(ImType == TYPE_3ARRAY && type == TYPE_BGR)
             {
-                image = new short[width*height*channels];
+                image = new uint8_t[width*height*channels];
                 int p = 0;
                 for(int i = 0; i < width*height*channels; i+=channels, p++)
                 {

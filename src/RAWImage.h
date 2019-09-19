@@ -20,6 +20,8 @@ namespace ImProcessing {
         void save(std::string destination_folder);
         void ApplyDCT(int window_size, double threshold, bool device); // device == true for CPU variant
         float* DCTCoefficients(bool device);
+        void AddNoise(float mu, float sigma);
+        void printImageCharacteristics();
 
     private:
         // functions
@@ -27,6 +29,7 @@ namespace ImProcessing {
         void transfer2OtherType(ImagePixelType type);
 
         // params
+        unsigned char *original_image;
         unsigned char *image;
         unsigned char *B;
         unsigned char *G;
