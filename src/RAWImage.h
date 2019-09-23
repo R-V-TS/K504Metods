@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <cstdint>
 
 #ifndef CUDA__RAWIMAGE_H
 #define CUDA__RAWIMAGE_H
@@ -29,7 +30,7 @@ namespace ImProcessing {
         void transfer2OtherType(ImagePixelType type);
 
         // params
-        unsigned char *original_image;
+        uint8_t *original_image;
         unsigned char *image;
         unsigned char *B;
         unsigned char *G;

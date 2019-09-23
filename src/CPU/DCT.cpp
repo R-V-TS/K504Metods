@@ -174,7 +174,7 @@ namespace ImProcessing{
             }
     }
 
-    void getImageBlock(unsigned char* image, int i_, int j_, int image_width, int window_size, float* block) {
+    void getImageBlock(uint8_t* image, int i_, int j_, int image_width, int window_size, float* block) {
         for (int i = i_; i < window_size+i_; i++)
             for (int j = j_; j < (window_size)+j_; j++) {
                 block[window_size * (i-i_) + (j - j_)] = ((float) image[(image_width * (i)) + (j)]);
@@ -196,7 +196,7 @@ namespace ImProcessing{
             return zn;
     }
 
-    float* DCT(unsigned char* image_, int width_, int height_, int wind_size_)
+    float* DCT(uint8_t* image_, int width_, int height_, int wind_size_)
     {
         float *DCT_creator_mtx;
         float *DCT_creator_mtx_T;
@@ -241,7 +241,7 @@ namespace ImProcessing{
         return im_temp;
     }
 
-    unsigned char* ADCT(float* image_dct, int width_, int height_, int wind_size_)
+    uint8_t* ADCT(float* image_dct, int width_, int height_, int wind_size_)
     {
         float *DCT_creator_mtx;
         float *DCT_creator_mtx_T;
@@ -270,7 +270,7 @@ namespace ImProcessing{
 
         float *block = new float[wind_size_*wind_size_];
         float *temp = new float[wind_size_*wind_size_];
-        unsigned char *im_temp = new unsigned char[width_ * height_];
+        uint8_t *im_temp = new uint8_t[width_ * height_];
 
         for (int i = 0; i < height_; i += wind_size_) {
             for (int j = 0; j < width_; j += wind_size_) {
@@ -280,7 +280,7 @@ namespace ImProcessing{
 
                 for (int l = i; l < wind_size_ + i; l++) // Put DCT block to filtered
                     for (int t = j; t < wind_size_ + j; t++) {
-                        im_temp[width_ * l + t] = ((unsigned char) block[wind_size_ * (l - i) + (t - j)]);
+                        im_temp[width_ * l + t] = ((uint8_t) block[wind_size_ * (l - i) + (t - j)]);
                     }
             }
         }

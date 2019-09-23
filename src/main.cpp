@@ -88,12 +88,12 @@ int main(int args, char **argv)
 
         if(method == "Test")
         {
-            image.AddNoise(0, 5);
+            image.AddNoise(0, 2);
             float* coff = image.DCTCoefficients(cpu_gpu);
             for (int i = 0; i < 16; i++) printf("%f ", coff[i]);
             printf("\n");
             image.printImageCharacteristics();
-            image.ApplyDCT(8,0.012,cpu_gpu);
+            image.ApplyDCT(8,0.012, cpu_gpu);
             float* coeff = image.DCTCoefficients(cpu_gpu);
             for (int i = 0; i < 16; i++) printf("%f ", coeff[i]);
             printf("\n");

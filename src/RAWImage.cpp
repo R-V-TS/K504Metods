@@ -23,13 +23,13 @@ namespace ImProcessing
             PrintError("Path don't have image!");
             return;
         } else{
-            unsigned char *image_pxl = (unsigned char*)imCV.data;
+            uint8_t *image_pxl = (uint8_t*)imCV.data;
             createImageArray(image_pxl, imCV.cols, imCV.rows, type);
         }
 
     }
 
-    RAWImage::RAWImage(unsigned char *image_pixel, int image_width, int image_height, ImProcessing::ImagePixelType type) {
+    RAWImage::RAWImage(uint8_t *image_pixel, int image_width, int image_height, ImProcessing::ImagePixelType type) {
         createImageArray(image_pixel, image_width, image_height, type);
     }
 
@@ -39,13 +39,13 @@ namespace ImProcessing
         height = 0;
     }
 
-    void RAWImage::createImageArray(unsigned char *image_pixel, int image_width, int image_height,
+    void RAWImage::createImageArray(uint8_t *image_pixel, int image_width, int image_height,
                                     ImProcessing::ImagePixelType type) {
         switch(type)
         {
             case 1:
-                image = new unsigned char[image_height*image_width*3];
-                original_image = new unsigned char[image_height*image_width*3];
+                image = new uint8_t[image_height*image_width*3];
+                original_image = new uint8_t[image_height*image_width*3];
                 for(int i = 0; i < image_width*image_height*3; i++){
                     image[i] = image_pixel[i];
                     original_image[i] = image[i];
@@ -61,10 +61,10 @@ namespace ImProcessing
                 height = image_height;
                 channels = 3;
                 ImType = type;
-                B = new unsigned char[width*height];
-                G = new unsigned char[width*height];
-                R = new unsigned char[width*height];
-                original_image = new unsigned char[image_height*image_width*3];
+                B = new uint8_t[width*height];
+                G = new uint8_t[width*height];
+                R = new uint8_t[width*height];
+                original_image = new uint8_t[image_height*image_width*3];
                 int p = 0;
                 for(int i = 0; i < image_width*image_height*channels; i+=channels)
                 {
@@ -320,9 +320,15 @@ namespace ImProcessing
             transfer2OtherType(TYPE_BGR);
 
         float* PSNR_ = PSNR(original_image, image, width, height, channels);
+        float* PSNR_HVS_M = PSNRHVSM(original_image, image, width, height, channels);
 
+        printf("PSNR: ");
         for(int i = 0; i < 3; i++)
             printf("%f ", PSNR_[i]);
+        printf("\n");
+        printf("PSNR-HVS / PSNR-HVS-M: ");
+        for(int i = 0; i < 6; i+=2)
+            printf(" %f / %f ", PSNR_HVS_M[i], PSNR_HVS_M[i+1]);
         printf("\n");
     }
 
@@ -331,9 +337,9 @@ namespace ImProcessing
         {
             if(ImType == TYPE_BGR && type == TYPE_3ARRAY)
             {
-                B = new unsigned char[width*height];
-                G = new unsigned char[width*height];
-                R = new unsigned char[width*height];
+                B = new uint8_t[width*height];
+                G = new uint8_t[width*height];
+                R = new uint8_t[width*height];
                 int p = 0;
                 for(int i = 0; i < width*height*channels; i+=channels, p++)
                 {
@@ -345,7 +351,7 @@ namespace ImProcessing
             }
             else if(ImType == TYPE_3ARRAY && type == TYPE_BGR)
             {
-                image = new unsigned char[width*height*channels];
+                image = new uint8_t[width*height*channels];
                 int p = 0;
                 for(int i = 0; i < width*height*channels; i+=channels, p++)
                 {
