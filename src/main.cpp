@@ -99,6 +99,11 @@ int main(int args, char **argv)
             printf("\n");
             image.printImageCharacteristics();
         }
+
+        if(method == "TestBM3D")
+        {
+            image.ApplyBM3D("Can", true);
+        }
     }
     unsigned int finish_time = clock();
     printf("\nProgram works %f s\n", (float) (finish_time-time_start)/CLOCKS_PER_SEC);

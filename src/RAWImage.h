@@ -20,6 +20,7 @@ namespace ImProcessing {
         void show();
         void save(std::string destination_folder);
         void ApplyDCT(int window_size, double threshold, bool device); // device == true for CPU variant
+        void ApplyBM3D(std::string metric, bool device); // device == true for CPU variant
         float* DCTCoefficients(bool device);
         void AddNoise(float mu, float sigma);
         void printImageCharacteristics();

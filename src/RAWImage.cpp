@@ -12,6 +12,7 @@
 
 // Metods
 #include "CPU/DCT.h"
+#include "CPU/BM3D.h"
 #include "GPU/GPU_Functions.h"
 
 namespace ImProcessing
@@ -194,6 +195,22 @@ namespace ImProcessing
             image = ADCT_GPU(DCT_ARRAY, width, height, channels, window_size);
             free(DCT_ARRAY);
         }
+    }
+
+    void RAWImage::ApplyBM3D(std::string metric, bool device){
+        if(ImType != TYPE_3ARRAY)
+        {
+            transfer2OtherType(TYPE_3ARRAY);
+        }
+        float* MSK = new float[8*8];
+        float* W = new float[8*8];
+        for(int i = 0; i < 8*8; i++)
+        {
+            MSK[i] = 1;
+            W[i] = 1;
+        }
+
+        uint8_t* res = BM3D_CPU(R, width, height, 0, "Canberra", MSK, W);
     }
 
     float* RAWImage::DCTCoefficients(bool device) {
