@@ -24,15 +24,15 @@ for z in range(0, 1):
     image = K504Metods.RAWImage(im_array.astype(np.uint8), K504Metods.TYPE_BGR)
     #image.printImage()
     #coff = image.DCTCoefficients(16*3)
-    image.AddNoise(0, 5)
+    image.AddNoise(0, 1)
     i = image.getImage(512 * 512 * 3)
     i = i.reshape((512, 512, 3))
     im = Image.fromarray(i.astype(np.uint8))
     im.show()
-    image.printImageCharacteristics()
-    print(PSNR(im_array, i))
+    #image.printImageCharacteristics()
+    #print(PSNR(im_array, i))
 
-    image.ApplyDCT(8, 0.12)
+    image.ApplyDCT(8, 0.2, True) #true is run in cpu
 
     image.printImageCharacteristics()
 

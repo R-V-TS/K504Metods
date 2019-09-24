@@ -3,12 +3,11 @@
 //
 
 #include <cstdlib>
-#include <vector>
+#include <string>
 #include <cstdint>
 
 #ifndef CUDA__RAWIMAGE_H
 #define CUDA__RAWIMAGE_H
-using namespace std;
 
 namespace ImProcessing {
     enum ImagePixelType {TYPE_BGR = 1, TYPE_RGB, TYPE_GRAYSCALE, TYPE_3ARRAY};
@@ -17,23 +16,25 @@ namespace ImProcessing {
     public:
         RAWImage(uint8_t* pixel_array, int image_width, int image_height, int channels_, ImagePixelType type);
         ~RAWImage();
-        void ApplyDCT(int window_size, double threshold);
-        void DCTCoefficients(float* DCT_Coff, int n);
-        void getImage(uint8_t* pixel_array, int n);
-        void printImage();
+        void show();
+        void save(std::string destination_folder);
+        void ApplyDCT(int window_size, double threshold, bool device); // device == true for CPU variant
+        float* DCTCoefficients(bool device);
         void AddNoise(float mu, float sigma);
         void printImageCharacteristics();
+	void getImage(uint8_t* pixel_array, int n);
 
     private:
         // functions
+        void createImageArray(unsigned char *image_pixel, int image_width, int image_height, ImagePixelType type);
         void transfer2OtherType(ImagePixelType type);
 
         // params
         uint8_t *original_image;
-        uint8_t *image;
-        uint8_t *B;
-        uint8_t *G;
-        uint8_t *R;
+        unsigned char *image;
+        unsigned char *B;
+        unsigned char *G;
+        unsigned char *R;
         int width;
         int height;
         int channels;

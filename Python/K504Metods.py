@@ -95,6 +95,42 @@ except __builtin__.Exception:
         pass
     _newclass = 0
 
+
+def DCT(image_, width_, height_, wind_size_):
+    return _K504Metods.DCT(image_, width_, height_, wind_size_)
+DCT = _K504Metods.DCT
+
+def ADCT(image_dct, width_, height_, wind_size_):
+    return _K504Metods.ADCT(image_dct, width_, height_, wind_size_)
+ADCT = _K504Metods.ADCT
+
+def getImageBlock(*args):
+    return _K504Metods.getImageBlock(*args)
+getImageBlock = _K504Metods.getImageBlock
+
+def abs(zn):
+    return _K504Metods.abs(zn)
+abs = _K504Metods.abs
+
+def MSE(P_image, Q_image, width, height, channels):
+    return _K504Metods.MSE(P_image, Q_image, width, height, channels)
+MSE = _K504Metods.MSE
+
+def PSNR(P_image, Q_image, width, height, channels):
+    return _K504Metods.PSNR(P_image, Q_image, width, height, channels)
+PSNR = _K504Metods.PSNR
+
+def PSNRHVSM(P_image, Q_image, width, height, channels):
+    return _K504Metods.PSNRHVSM(P_image, Q_image, width, height, channels)
+PSNRHVSM = _K504Metods.PSNRHVSM
+
+def DCT_GPU(image, width, height, channels, window_size):
+    return _K504Metods.DCT_GPU(image, width, height, channels, window_size)
+DCT_GPU = _K504Metods.DCT_GPU
+
+def ADCT_GPU(DCT_array, width, height, channels, window_size):
+    return _K504Metods.ADCT_GPU(DCT_array, width, height, channels, window_size)
+ADCT_GPU = _K504Metods.ADCT_GPU
 TYPE_BGR = _K504Metods.TYPE_BGR
 TYPE_RGB = _K504Metods.TYPE_RGB
 TYPE_GRAYSCALE = _K504Metods.TYPE_GRAYSCALE
@@ -115,42 +151,29 @@ class RAWImage(_object):
     __swig_destroy__ = _K504Metods.delete_RAWImage
     __del__ = lambda self: None
 
-    def ApplyDCT(self, window_size, threshold):
-        return _K504Metods.RAWImage_ApplyDCT(self, window_size, threshold)
+    def show(self):
+        return _K504Metods.RAWImage_show(self)
 
-    def DCTCoefficients(self, DCT_Coff):
-        return _K504Metods.RAWImage_DCTCoefficients(self, DCT_Coff)
+    def save(self, destination_folder):
+        return _K504Metods.RAWImage_save(self, destination_folder)
 
-    def getImage(self, pixel_array):
-        return _K504Metods.RAWImage_getImage(self, pixel_array)
+    def ApplyDCT(self, window_size, threshold, device):
+        return _K504Metods.RAWImage_ApplyDCT(self, window_size, threshold, device)
 
-    def printImage(self):
-        return _K504Metods.RAWImage_printImage(self)
+    def DCTCoefficients(self, device):
+        return _K504Metods.RAWImage_DCTCoefficients(self, device)
 
     def AddNoise(self, mu, sigma):
         return _K504Metods.RAWImage_AddNoise(self, mu, sigma)
 
     def printImageCharacteristics(self):
         return _K504Metods.RAWImage_printImageCharacteristics(self)
+
+    def getImage(self, pixel_array):
+        return _K504Metods.RAWImage_getImage(self, pixel_array)
 RAWImage_swigregister = _K504Metods.RAWImage_swigregister
 RAWImage_swigregister(RAWImage)
 
-
-def DCT(image_, width_, height_, wind_size_):
-    return _K504Metods.DCT(image_, width_, height_, wind_size_)
-DCT = _K504Metods.DCT
-
-def ADCT(image_dct, width_, height_, wind_size_):
-    return _K504Metods.ADCT(image_dct, width_, height_, wind_size_)
-ADCT = _K504Metods.ADCT
-
-def getImageBlock(image, i_, j_, image_width, window_size, block):
-    return _K504Metods.getImageBlock(image, i_, j_, image_width, window_size, block)
-getImageBlock = _K504Metods.getImageBlock
-
-def abs(zn):
-    return _K504Metods.abs(zn)
-abs = _K504Metods.abs
 # This file is compatible with both classic and new-style classes.
 
 

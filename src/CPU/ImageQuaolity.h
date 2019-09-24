@@ -8,7 +8,7 @@
 
 namespace ImProcessing{
     float* MSE(uint8_t* P_image, uint8_t* Q_image, int width, int height, int channels);
-    float* PSNR(uint8_t* P_image, uint8_t* Q_image, int width, int height, int channels);float* PSNRHVS(uint8_t* P_image, uint8_t* Q_image, int width, int height, int channels);
+    float* PSNR(uint8_t* P_image, uint8_t* Q_image, int width, int height, int channels);
     float* PSNRHVSM(uint8_t* P_image, uint8_t* Q_image, int width, int height, int channels);
 }
 

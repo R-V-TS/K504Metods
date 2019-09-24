@@ -2,7 +2,9 @@
 
 %{
 #define SWIG_FILE_WITH_INIT
-#include "src/DCT.h"
+#include "../src/CPU/DCT.h"
+#include "../src/CPU/ImageQuaolity.h"
+#include "../src/GPU/GPU_Functions.h"
 #include "src/RAWImage.h"
 %}
 
@@ -17,5 +19,7 @@
 %apply (float* ARGOUT_ARRAY1, int DIM1) {(float* DCT_Coff, int n)}
 %apply (uint8_t* ARGOUT_ARRAY1, int DIM1) {(uint8_t* pixel_array, int n)}
 
-%include src/RAWImage.h
-%include src/DCT.h
+%include "../src/CPU/DCT.h"
+%include "../src/CPU/ImageQuaolity.h"
+%include "../src/GPU/GPU_Functions.h"
+%include "src/RAWImage.h"

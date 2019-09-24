@@ -156,6 +156,8 @@ namespace ImProcessing{
                 else PSNR_HVS_M[ch_2] = 10*log10f(255*255/PSNR_HVS_M[ch_2]);
             }
         }
+        delete[] blockP;
+        delete[] blockQ;
         return PSNR_HVS_M;
     }
 

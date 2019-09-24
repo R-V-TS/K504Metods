@@ -319,17 +319,18 @@ namespace ImProcessing
         if(ImType != TYPE_BGR)
             transfer2OtherType(TYPE_BGR);
 
+        printf("\nMetrics: \n");
         float* PSNR_ = PSNR(original_image, image, width, height, channels);
-        float* PSNR_HVS_M = PSNRHVSM(original_image, image, width, height, channels);
-
         printf("PSNR: ");
         for(int i = 0; i < 3; i++)
             printf("%f ", PSNR_[i]);
         printf("\n");
+
+        float* PSNR_HVS_M = PSNRHVSM(original_image, image, width, height, channels);
         printf("PSNR-HVS / PSNR-HVS-M: ");
         for(int i = 0; i < 6; i+=2)
             printf(" %f / %f ", PSNR_HVS_M[i], PSNR_HVS_M[i+1]);
-        printf("\n");
+        printf("\n\n");
     }
 
     void RAWImage::transfer2OtherType(ImProcessing::ImagePixelType type) {
