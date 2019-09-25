@@ -59,11 +59,59 @@ namespace ImProcessing{
         return res;
     }
 
+    float* getVector(float *Array_vectors, int start, int finish)
+    {
+        /*
+         * Function for get vector from big array
+         */
+        float* vector = new float[finish-start];
+        for(int i = start; i < finish; i++)
+            vector[i-start] = Array_vectors[i];
+        return vector;
+    }
+
+    int max(int first_, int second_)
+    {
+        if(first_ > second_) return first_;
+        else return second_;
+    }
+
+    int min(int first_, int second_)
+    {
+        if(first_ < second_) return first_;
+        else return second_;
+    }
+
+    float* matrixMultiplyBit(float* matrix1, float* matrix2, int length){
+        /*
+         * Multiply matrix bit by bit
+         */
+        float* res = new float[length];
+        for(int i = 0; i < length; i++)
+            res[i] = matrix1[i]*matrix2[i];
+        return res;
+    }
+
+    float* repmat(float* vector, int vector_width, int width_rep)
+    {
+        /*
+         *  copies vector to width_rep column
+         */
+        float* rep = new float[vector_width*width_rep];
+        for(int i = 0; i < width_rep; i++)
+        {
+            for(int j = 0; j < vector_width; j++)
+                rep[(i*width_rep)+j] = vector[j];
+        }
+        return rep;
+    }
+
     float* BM3D_thr(float* image, int im_width, int im_height, int window_size, float *MSK, float* W, float* Wwind2D, int bmax, float nSa, int Nstep, int stepSN, std::string metric, float otherThr, float alpha)
     {
         float *res = new float[2];
 
         /* Преобразование массивов в вектора не требуется, так как работаем с указателями */
+        int oP = Nstep;
         int nm1 = window_size;
 
         /* Adding rows and col to new image !Bne is new image! */
@@ -118,10 +166,57 @@ namespace ImProcessing{
                 for(int l = AV_index; l < AV_index+(nm1*nm1); l++)
                 {
                     AV[l] = temp[l-AV_index];
-                    printf("%f ", AV[l]);
                 }
-                printf("\n");
                 AV_index += (nm1*nm1);
+            }
+        }
+
+        uint8_t iCtr = oP - 1;
+        uint8_t cCtr = 0;
+        uint8_t j = 0;
+        uint8_t i = 0;
+        uint8_t startUp, startDown, startLeft, startRight;
+        for(int iii = 0; iii < (ss1-1); iii++)
+        {
+            iCtr++;
+            if((iCtr < oP) && (iii < (ss1-1)))
+                continue;
+            else
+                iCtr = 0;
+
+            cCtr = oP-1;
+            for(int jjj = 0; jjj < ss2-1; jjj++)
+            {
+                cCtr++;
+                if((cCtr < oP) && (iii < (ss1-1)))
+                    continue;
+                else
+                    cCtr = 0;
+
+                j = jjj + iii*ss2;
+                startUp = max(0, iii-int(nSa));
+                startLeft = max(0, jjj-int(nSa));
+                startDown = min(ss1, iii+int(nSa+1));
+                startRight = min(ss2, jjj+int(nSa+1));
+
+                float* curr_coll = getVector(AV, j*16, (j*16)+16);
+                float* val_index = new float[bmax];
+                uint8_t* min_index = new uint8_t[bmax];
+                for(int z = 0; z < bmax; z++)
+                {
+                    val_index[z] = 10000000;
+                    min_index[z] = 0;
+                }
+
+                float* rep_current_mat = repmat(matrixMultiplyBit(curr_coll, W, nm1*nm1), nm1*nm1, startRight-startLeft);
+
+                for (uint8_t mmm = startUp; mmm < startDown; mmm++)
+                {
+                    uint8_t length = (startRight+(mmm*ss2))*16 - (startLeft+(mmm*ss2))*16;
+                    float* rep_patch_mat = matrixMultiplyBit(getVector(AV, (startLeft+(mmm*ss2))*16, (startRight+(mmm*ss2))*16), repmat(W, nm1*nm1, startRight-startLeft), length);
+
+                    for(int ir = 0; ir < length; ir++) printf("%f ", rep_patch_mat[ir]);
+                }
             }
         }
 
