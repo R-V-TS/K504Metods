@@ -10,7 +10,7 @@
 namespace ImProcessing{
     void PrintError(std::string text)
     {
-        printf("Error: %s\n", text[0]);
+
     }
 }
 

@@ -133,74 +133,7 @@ namespace ImProcessing{
 
     void BM3D_main(int mmm, float* AV, float* rep_current_mat, int bmax, std::string metric, int startRight, int startLeft, int ss2, int nm1, int i, int j, float otherThr, float* W2v)
     {
-        float* val_index = new float[bmax];
-        uint8_t* min_index = new uint8_t[bmax];
-        for(int z = 0; z < bmax; z++)
-        {
-            val_index[z] = 10000000;
-            min_index[z] = 0;
-        }
-        uint8_t length = startRight-startLeft;
-        float *vec = getVector(AV, (startLeft+(mmm*ss2))*nm1*nm1, (startRight+(mmm*ss2))*nm1*nm1);
-        float *vec_W2v = repmat(W2v, nm1*nm1, startRight-startLeft);
-        float* rep_patch_mat = matrixMultiplyBit(vec, vec_W2v, length*nm1*nm1);
-        delete[] vec;
-        delete[] vec_W2v;
 
-        double* dvec = new double[length];
-        int k_d = 0;
-        float BC_sum2 = 0;
-        for(int i_d = 0; i_d < nm1*nm1; i_d++)   // нахождение вектора дальности
-        {
-            if (metric == "Euclidean") {
-                for(int j_d = 0; j_d < length; j_d++) dvec[j_d] += pow((rep_current_mat[k_d + j_d] - rep_patch_mat[k_d+j_d]), 2);
-            } else if(metric == "BrayCurtis")
-            {
-                if(i_d != 0)
-                {
-                    dvec[i_d] += abs((rep_current_mat[k_d] - rep_patch_mat[k_d]));
-                    BC_sum2 += abs((rep_current_mat[k_d] + rep_patch_mat[k_d]));
-                }
-            } else if(metric == "Canberra") {  // Работает хорошо, за остальных не уверне
-                if(i_d != 0) {
-                    for (int j_d = 0; j_d < length; j_d++) {
-                        dvec[j_d] += abs((rep_current_mat[(j_d*nm1*nm1)+i_d] - rep_patch_mat[(j_d*nm1*nm1)+i_d])) / (abs(rep_current_mat[(j_d*nm1*nm1)+i_d]) + abs(rep_patch_mat[(j_d*nm1*nm1)+i_d]));
-                    }
-                }
-            }
-            if(metric == "BrayCurtis") dvec[i_d] /= BC_sum2;
-        }
-
-        i = startLeft + mmm*ss2;
-        // Добавляем веса в массив и сортируем их в порядке убывания
-        for(int d_i=0; d_i < length; d_i++)
-        {
-            if(dvec[d_i] < val_index[d_i] && dvec[d_i] < otherThr)
-            {
-                if((i+d_i) == j)
-                    continue;
-
-                val_index[0] = dvec[d_i];  // помещаем в первую ячейку
-                min_index[0] = i+d_i;
-
-                int jj = 0;
-                while(jj < bmax-2 && (val_index[jj] < val_index[jj+1]))
-                {
-                    float temp_val = val_index[jj];
-                    int temp_ind = min_index[jj];
-                    val_index[jj] = val_index[jj+1];
-                    min_index[jj] = min_index[jj+1];
-                    min_index[jj+1] = temp_ind;
-                    val_index[jj+1] = temp_val;
-                    jj += 1;
-                }
-            }
-        }
-
-        for(int i_all = 0; i_all < length; i_all++)
-            dvec[i_all] = 0;
-        delete[] rep_patch_mat;
-        delete[] dvec;
     }
 
     float* BM3D_thr(float* image, int im_width, int im_height, int window_size, float *MSK, float* W, float* Wwind2D, int bmax, float nSa, int Nstep, int stepSN, std::string metric, float otherThr, float alpha)
@@ -303,15 +236,77 @@ namespace ImProcessing{
 
                 float* rep_current_mat = repmat(matrixMultiplyBit(curr_coll, W2v, nm1*nm1), nm1*nm1, startRight-startLeft);
 
-                std::vector<std::thread> vector_thread;
-                for (int mmm = startUp; mmm < startDown; mmm++){
-                    //BM3D_main(int mmm, float* AV, float* rep_current_mat, int bmax, std::string metric, int startRight,
-                    // int startLeft, int ss2, int nm1, int i, int j, float otherThr, float* W2v)
-                    vector_thread.push_back(std::thread(BM3D_main, mmm, AV, rep_current_mat, bmax, metric, startRight, startLeft, ss2, nm1, i, j, otherThr, W2v));
-                }
+                for(int mmm = startUp; mmm < startDown; mmm++)
+                {
+                    float* val_index = new float[bmax];
+                    uint8_t* min_index = new uint8_t[bmax];
+                    for(int z = 0; z < bmax; z++)
+                    {
+                        val_index[z] = 10000000;
+                        min_index[z] = 0;
+                    }
+                    uint8_t length = startRight-startLeft;
+                    float *vec = getVector(AV, (startLeft+(mmm*ss2))*nm1*nm1, (startRight+(mmm*ss2))*nm1*nm1);
+                    float *vec_W2v = repmat(W2v, nm1*nm1, startRight-startLeft);
+                    float* rep_patch_mat = matrixMultiplyBit(vec, vec_W2v, length*nm1*nm1);
+                    delete[] vec;
+                    delete[] vec_W2v;
 
-                for(int i = 0; i < vector_thread.size(); i++)
-                    vector_thread[i].join();
+                    double* dvec = new double[length];
+                    int k_d = 0;
+                    float BC_sum2 = 0;
+                    for(int i_d = 0; i_d < nm1*nm1; i_d++)   // нахождение вектора дальности
+                    {
+                        if (metric == "Euclidean") {
+                            for(int j_d = 0; j_d < length; j_d++) dvec[j_d] += pow((rep_current_mat[k_d + j_d] - rep_patch_mat[k_d+j_d]), 2);
+                        } else if(metric == "BrayCurtis")
+                        {
+                            if(i_d != 0)
+                            {
+                                dvec[i_d] += abs((rep_current_mat[k_d] - rep_patch_mat[k_d]));
+                                BC_sum2 += abs((rep_current_mat[k_d] + rep_patch_mat[k_d]));
+                            }
+                        } else if(metric == "Canberra") {  // Работает хорошо, за остальных не уверне
+                            if(i_d != 0) {
+                                for (int j_d = 0; j_d < length; j_d++) {
+                                    dvec[j_d] += abs((rep_current_mat[(j_d*nm1*nm1)+i_d] - rep_patch_mat[(j_d*nm1*nm1)+i_d])) / (abs(rep_current_mat[(j_d*nm1*nm1)+i_d]) + abs(rep_patch_mat[(j_d*nm1*nm1)+i_d]));
+                                }
+                            }
+                        }
+                        if(metric == "BrayCurtis") dvec[i_d] /= BC_sum2;
+                    }
+
+                    i = startLeft + mmm*ss2;
+                    // Добавляем веса в массив и сортируем их в порядке убывания
+                    for(int d_i=0; d_i < length; d_i++)
+                    {
+                        if(dvec[d_i] < val_index[d_i] && dvec[d_i] < otherThr)
+                        {
+                            if((i+d_i) == j)
+                                continue;
+
+                            val_index[0] = dvec[d_i];  // помещаем в первую ячейку
+                            min_index[0] = i+d_i;
+
+                            int jj = 0;
+                            while(jj < bmax-2 && (val_index[jj] < val_index[jj+1]))
+                            {
+                                float temp_val = val_index[jj];
+                                int temp_ind = min_index[jj];
+                                val_index[jj] = val_index[jj+1];
+                                min_index[jj] = min_index[jj+1];
+                                min_index[jj+1] = temp_ind;
+                                val_index[jj+1] = temp_val;
+                                jj += 1;
+                            }
+                        }
+                    }
+
+                    for(int i_all = 0; i_all < length; i_all++)
+                        dvec[i_all] = 0;
+                    delete[] rep_patch_mat;
+                    delete[] dvec;
+                }
 
                 delete[] rep_current_mat;
                 delete[] curr_coll;
