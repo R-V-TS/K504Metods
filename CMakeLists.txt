@@ -27,6 +27,7 @@ find_package(OpenCV REQUIRED)
 #find_package(PythonInterp REQUIRED)
 #find_package(PythonLibs REQUIRED)
 set(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 #set(CMAKE_CXX_FLAGS "-pthread -lpython2.7 -lboost_system")
 
 add_executable(ImageProjCPU
