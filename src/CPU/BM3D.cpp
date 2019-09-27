@@ -149,7 +149,6 @@ namespace ImProcessing{
 
         for(int iii = i_start; iii < i_finish; iii++)
         {
-
             iCtr++;
             if((iCtr < oP) && (iii < (ss1-1)))
                 continue;
@@ -172,7 +171,6 @@ namespace ImProcessing{
                 startRight = min(ss2, jjj+nSa+1);
 
                 int current_coll = j*nm1_vec;
-                //float* curr_coll = getVector(AV, j*nm1_vec, (j*nm1_vec)+(nm1_vec));
 
                 for (int mmm = startUp; mmm < startDown; mmm++){
                     float* val_index = new float[bmax];
@@ -186,7 +184,6 @@ namespace ImProcessing{
                     uint8_t length = startRight-startLeft;
 
                     int current_patch_ind = (startLeft+(mmm*ss2))*nm1_vec;
-                    //float *current_patch = getVector(AV, (startLeft+(mmm*ss2))*nm1_vec, (startRight+(mmm*ss2))*nm1_vec);
 
                     double* dvec = new double[length];
                     int k_d = 0;
@@ -243,15 +240,12 @@ namespace ImProcessing{
                         dvec[i_all] = 0;
                     }
 
-                    //delete[] current_patch;
                     delete[] dvec;
                 }
 
-                //delete[] curr_coll;
             }
         }
         unsigned int finish_time = clock();
-        //printf("\nThread %i end. Time = %f s\n", (ss1/i_start), (float) (finish_time-start_time)/CLOCKS_PER_SEC);
     }
 
     float* BM3D_thr(float* image, int im_width, int im_height, int window_size, float *MSK, float* W, float* Wwind2D, int bmax, float nSa, int Nstep, int stepSN, std::string metric, float otherThr, float alpha)
