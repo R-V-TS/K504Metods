@@ -9,6 +9,7 @@
 #include "DCT.h"
 #include <vector>
 #include <thread>
+#include <ctime>
 
 namespace ImProcessing{
 
@@ -131,85 +132,135 @@ namespace ImProcessing{
         return res;
     }
 
-    void BM3D_main(int mmm, float* AV, float* rep_current_mat, int bmax, std::string metric, int startRight, int startLeft, int ss2, int nm1, int i, int j, float otherThr, float* W2v)
+    void BM3D_coreThread(int i_start, int i_finish, int oP, int ss1, int ss2, int window_size, float* AV, float *MSK, float* W, int bmax, float nSa, std::string metric, float otherThr)
     {
-        float* val_index = new float[bmax];
-        uint8_t* min_index = new uint8_t[bmax];
-        for(int z = 0; z < bmax; z++)
-        {
-            val_index[z] = 10000000;
-            min_index[z] = 0;
-        }
-        uint8_t length = startRight-startLeft;
-        float *vec = getVector(AV, (startLeft+(mmm*ss2))*nm1*nm1, (startRight+(mmm*ss2))*nm1*nm1);
-        float *vec_W2v = repmat(W2v, nm1*nm1, startRight-startLeft);
-        float* rep_patch_mat = matrixMultiplyBit(vec, vec_W2v, length*nm1*nm1);
-        delete[] vec;
-        delete[] vec_W2v;
+        /*
+         * Main thread function to run code in many thread
+         */
+        int oT = otherThr;
+        unsigned int start_time = clock();
+        int iCtr = (oP - 1);
+        int cCtr = 0;
+        int j = 0;
+        int i = 0;
+        int startUp, startDown, startLeft, startRight;
+        int nm1 = window_size;
+        int nm1_vec = nm1*nm1;
 
-        double* dvec = new double[length];
-        int k_d = 0;
-        float BC_sum2 = 0;
-        for(int i_d = 0; i_d < nm1*nm1; i_d++)   // нахождение вектора дальности
+        for(int iii = i_start; iii < i_finish; iii++)
         {
-            if (metric == "Euclidean") {
-                for(int j_d = 0; j_d < length; j_d++) dvec[j_d] += pow((rep_current_mat[k_d + j_d] - rep_patch_mat[k_d+j_d]), 2);
-            } else if(metric == "BrayCurtis")
-            {
-                if(i_d != 0)
-                {
-                    dvec[i_d] += abs((rep_current_mat[k_d] - rep_patch_mat[k_d]));
-                    BC_sum2 += abs((rep_current_mat[k_d] + rep_patch_mat[k_d]));
-                }
-            } else if(metric == "Canberra") {  // Работает хорошо, за остальных не уверне
-                if(i_d != 0) {
-                    for (int j_d = 0; j_d < length; j_d++) {
-                        dvec[j_d] += abs((rep_current_mat[(j_d*nm1*nm1)+i_d] - rep_patch_mat[(j_d*nm1*nm1)+i_d])) / (abs(rep_current_mat[(j_d*nm1*nm1)+i_d]) + abs(rep_patch_mat[(j_d*nm1*nm1)+i_d]));
-                    }
-                }
-            }
-            if(metric == "BrayCurtis") dvec[i_d] /= BC_sum2;
-        }
 
-        i = startLeft + mmm*ss2;
-        // Добавляем веса в массив и сортируем их в порядке убывания
-        for(int d_i=0; d_i < length; d_i++)
-        {
-            if(dvec[d_i] < val_index[d_i] && dvec[d_i] < otherThr)
+            iCtr++;
+            if((iCtr < oP) && (iii < (ss1-1)))
+                continue;
+            else
+                iCtr = 0;
+
+            cCtr = oP-1;
+            for(int jjj = 0; jjj < ss2-1; jjj++)
             {
-                if((i+d_i) == j)
+                cCtr++;
+                if((cCtr < oP) && (iii < (ss1-1)))
                     continue;
+                else
+                    cCtr = 0;
 
-                val_index[0] = dvec[d_i];  // помещаем в первую ячейку
-                min_index[0] = i+d_i;
+                j = jjj + iii*ss2;
+                startUp = max(0, iii-nSa);
+                startLeft = max(0, jjj-nSa);
+                startDown = min(ss1, iii+nSa+1);
+                startRight = min(ss2, jjj+nSa+1);
 
-                int jj = 0;
-                while(jj < bmax-2 && (val_index[jj] < val_index[jj+1]))
-                {
-                    float temp_val = val_index[jj];
-                    int temp_ind = min_index[jj];
-                    val_index[jj] = val_index[jj+1];
-                    min_index[jj] = min_index[jj+1];
-                    min_index[jj+1] = temp_ind;
-                    val_index[jj+1] = temp_val;
-                    jj += 1;
+                int current_coll = j*nm1_vec;
+                //float* curr_coll = getVector(AV, j*nm1_vec, (j*nm1_vec)+(nm1_vec));
+
+                for (int mmm = startUp; mmm < startDown; mmm++){
+                    float* val_index = new float[bmax];
+                    uint8_t* min_index = new uint8_t[bmax];
+                    for(int z = 0; z < bmax; z++)
+                    {
+                        val_index[z] = 10000000;
+                        min_index[z] = 0;
+                    }
+
+                    uint8_t length = startRight-startLeft;
+
+                    int current_patch_ind = (startLeft+(mmm*ss2))*nm1_vec;
+                    //float *current_patch = getVector(AV, (startLeft+(mmm*ss2))*nm1_vec, (startRight+(mmm*ss2))*nm1_vec);
+
+                    double* dvec = new double[length];
+                    int k_d = 0;
+                    float BC_sum2 = 0;
+
+                    for(int i_d = 0; i_d < nm1_vec; i_d++)   // нахождение вектора дальности
+                    {
+                        if (metric == "Euclidean") {
+                            //for(int j_d = 0; j_d < length; j_d++) dvec[j_d] += pow((rep_current_mat[k_d + j_d] - rep_patch_mat[k_d+j_d]), 2);
+                        } else if(metric == "BrayCurtis")
+                        {
+                            /*if(i_d != 0)
+                            {
+                                dvec[i_d] += abs((rep_current_mat[k_d] - rep_patch_mat[k_d]));
+                                BC_sum2 += abs((rep_current_mat[k_d] + rep_patch_mat[k_d]));
+                            }*/
+                        } else if(metric == "Canberra") {  // Работает хорошо, за остальных не уверне
+                            if(i_d != 0) {
+                                for (int j_d = 0; j_d < length; j_d++) {
+                                    dvec[j_d] += abs((AV[current_coll + i_d] - AV[current_patch_ind + (j_d*nm1_vec) + i_d])*W[i_d]) / (abs(AV[current_coll + i_d]*W[i_d]) + abs(AV[current_patch_ind + (j_d*nm1_vec)+i_d]*W[i_d]));
+                                }
+                            }
+                        }
+                        if(metric == "BrayCurtis") dvec[i_d] /= BC_sum2;
+                    }
+
+                    i = startLeft + mmm*ss2;
+                    // Добавляем веса в массив и сортируем их в порядке убывания
+                    for(int d_i=0; d_i < length; d_i++)
+                    {
+                        if(dvec[d_i] < val_index[0] && dvec[d_i] < oT)
+                        {
+                            if((i+d_i) == j)
+                                continue;
+
+                            val_index[0] = dvec[d_i];  // помещаем в первую ячейку
+                            min_index[0] = i+d_i;
+
+                            int jj = 0;
+                            while(jj < bmax-2 && (val_index[jj] < val_index[jj+1]))
+                            {
+                                float temp_val = val_index[jj];
+                                int temp_ind = min_index[jj];
+                                val_index[jj] = val_index[jj+1];
+                                min_index[jj] = min_index[jj+1];
+                                min_index[jj+1] = temp_ind;
+                                val_index[jj+1] = temp_val;
+                                jj += 1;
+                            }
+                        }
+                    }
+
+                    for(int i_all = 0; i_all < length; i_all++) {
+                        dvec[i_all] = 0;
+                    }
+
+                    //delete[] current_patch;
+                    delete[] dvec;
                 }
+
+                //delete[] curr_coll;
             }
         }
-
-        for(int i_all = 0; i_all < length; i_all++)
-            dvec[i_all] = 0;
-        delete[] rep_patch_mat;
-        delete[] dvec;
+        unsigned int finish_time = clock();
+        //printf("\nThread %i end. Time = %f s\n", (ss1/i_start), (float) (finish_time-start_time)/CLOCKS_PER_SEC);
     }
 
     float* BM3D_thr(float* image, int im_width, int im_height, int window_size, float *MSK, float* W, float* Wwind2D, int bmax, float nSa, int Nstep, int stepSN, std::string metric, float otherThr, float alpha)
     {
         float *res = new float[2];
-        float *W2v = represent2vector(W, window_size, window_size);
         /* Преобразование массивов в вектора не требуется, так как работаем с указателями */
         int oP = Nstep;
         int nm1 = window_size;
+        int nm1_vec = nm1*nm1;
 
         /* Adding rows and col to new image !Bne is new image! */
         float* Bne = new float[(im_width+16)*(im_height+16)];
@@ -238,21 +289,13 @@ namespace ImProcessing{
         int height = im_height + nm1*2;
         /* End transform block */
 
-        float* Buff = new float[width*height];
-        float* weig = new float[width*height];
-
-        for(int i = 0; i < width*height; i++)
-        {
-            Buff[i] = Bne[i]/32;
-            weig[i] = 1/32;
-        }
-
-        float* temp = new float[nm1*nm1];
-        float* dct_temp = new float[nm1*nm1];
+        float* temp = new float[nm1_vec];
+        float* dct_temp = new float[nm1_vec];
         int AV_index = 0;
         int ss1 = height-nm1;
         int ss2 = width-nm1;
-        float* AV = new float[ss1*ss2*nm1*nm1];
+        float* AV = new float[ss1*ss2*nm1_vec];
+
         // Create array, where dct block as vector
         for(int i = 0; i < ss1; i++){
             for(int j = 0; j < ss2;j++)
@@ -260,63 +303,24 @@ namespace ImProcessing{
                 getImageBlock(Bne, i, j, width, nm1, temp);
                 MultiplyMatrix(&DCT_Creator8[0][0], temp, dct_temp, nm1);
                 MultiplyMatrix(dct_temp, &DCT_Creator8_T[0][0], temp, nm1);
-                float *vec = represent2vector(temp, nm1, nm1);
-                for(int l = AV_index; l < AV_index+(nm1*nm1); l++)
+                for(int l = AV_index; l < AV_index+(nm1_vec); l++)
                 {
-                    AV[l] = vec[l-AV_index];
+                    AV[l] = temp[l-AV_index];
                 }
-                AV_index += (nm1*nm1);
-                delete[] vec;
+                AV_index += (nm1_vec);
             }
         }
 
-        int iCtr = oP - 1;
-        int cCtr = 0;
-        int j = 0;
-        int i = 0;
-        int startUp, startDown, startLeft, startRight;
-        for(int iii = 0; iii < (ss1-1); iii++)
-        {
-            iCtr++;
-            if((iCtr < oP) && (iii < (ss1-1)))
-                continue;
-            else
-                iCtr = 0;
+        std::vector<std::thread> thread_array;
+        int tcols = 70;
+        int thread_cols = (ss1-1)/tcols; // Делим все изображение для количества потоков
+        int i = 0; // Указатель на край потока
+        for(; i < tcols-1; i++)
+            thread_array.push_back(std::thread(BM3D_coreThread, i*thread_cols, (i+1)*thread_cols-1, oP, ss1, ss2, window_size, AV, MSK, W, bmax, nSa, metric, otherThr));
+        thread_array.push_back(std::thread(BM3D_coreThread, i*thread_cols, ss1-1, oP, ss1, ss2, window_size, AV, MSK, W, bmax, nSa, metric, otherThr));
 
-            cCtr = oP-1;
-            for(int jjj = 0; jjj < ss2-1; jjj++)
-            {
-                cCtr++;
-                if((cCtr < oP) && (iii < (ss1-1)))
-                    continue;
-                else
-                    cCtr = 0;
-
-                j = jjj + iii*ss2;
-                startUp = max(0, iii-nSa);
-                startLeft = max(0, jjj-nSa);
-                startDown = min(ss1, iii+nSa+1);
-                startRight = min(ss2, jjj+nSa+1);
-
-                float* curr_coll = getVector(AV, j*nm1*nm1, (j*nm1*nm1)+(nm1*nm1));
-
-
-                float* rep_current_mat = repmat(matrixMultiplyBit(curr_coll, W2v, nm1*nm1), nm1*nm1, startRight-startLeft);
-
-                std::vector<std::thread> vector_thread;
-                for (int mmm = startUp; mmm < startDown; mmm++){
-                    //BM3D_main(int mmm, float* AV, float* rep_current_mat, int bmax, std::string metric, int startRight,
-                    // int startLeft, int ss2, int nm1, int i, int j, float otherThr, float* W2v)
-                    vector_thread.push_back(std::thread(BM3D_main, mmm, AV, rep_current_mat, bmax, metric, startRight, startLeft, ss2, nm1, i, j, otherThr, W2v));
-                }
-
-                for(int i = 0; i < vector_thread.size(); i++)
-                    vector_thread[i].join();
-
-                delete[] rep_current_mat;
-                delete[] curr_coll;
-            }
-        }
+        for(i = 0; i < thread_array.size(); i++)
+            thread_array[i].join();
 
         return res;
     }
