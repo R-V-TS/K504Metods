@@ -210,7 +210,7 @@ namespace ImProcessing
             W[i] = 1;
         }
 
-        uint8_t* res = BM3D_CPU(R, width, height, 0, "Canberra", MSK, W);
+        R = BM3D(R, width, height);
     }
 
     float* RAWImage::DCTCoefficients(bool device) {

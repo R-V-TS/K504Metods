@@ -103,6 +103,7 @@ int main(int args, char **argv)
         if(method == "TestBM3D")
         {
             image.ApplyBM3D("Canberra", true);
+            image.show();
         }
     }
     unsigned int finish_time = clock();
