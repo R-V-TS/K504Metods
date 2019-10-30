@@ -65,13 +65,13 @@ uint8_t* BM3D(uint8_t* image_, int width_, int height_)
 {
     using namespace ImProcessing;
     srand(time(NULL));
-    uint16_t im_size = width_;
-    uint16_t im_otr_size = width_+16;
+    uint16_t im_otr_width = width_+16;
+    uint16_t im_otr_height = height_+16;
 
-    float* image = new float[im_size*im_size];
-    float* im_otr = new float[(im_size+16)*(im_size+16)];
-    float* Buff = new float[(im_size+16)*(im_size+16)];
-    float* weig = new float[(im_size+16)*(im_size+16)];
+    float* image = new float[width_*height_];
+    float* im_otr = new float[(width_+16)*(height_+16)];
+    float* Buff = new float[(width_+16)*(height_+16)];
+    float* weig = new float[(width_+16)*(height_+16)];
 
     float W2v[64] ={0,0,0,0,0,0,0,0,
                     0,0,0,0,0,0,0,0,
@@ -92,52 +92,52 @@ uint8_t* BM3D(uint8_t* image_, int width_, int height_)
             1,1,1,1,1,1,1,1
     };
 
-    for(int i = 0; i < im_size*im_size; i++) image[i] = image_[i];
+    for(int i = 0; i < width_*height_; i++) image[i] = image_[i];
     unsigned int start = clock();
 
-    for(int i = 0; i < im_size; i++)
+    for(int i = 0; i < height_; i++)
     {
-        float *a = im_otr + ((i+8)*im_otr_size) + 8;
-        float *b = image + (i*im_size);
-        for(int j = 0; j < im_size; j++){
+        float *a = im_otr + ((i+8)*im_otr_width) + 8;
+        float *b = image + (i*width_);
+        for(int j = 0; j < width_; j++){
             a[j] = b[j]/255;
         }
     }
 
-    for(int i = 0; i < im_size; i++)
+    for(int i = 0; i < height_; i++)
     {
         float *a = im_otr + i + 8;
         float *b = im_otr + i + 8;
         for(int j = 0; j < 8; j++)
         {
-            a[(j*im_otr_size)] = b[(im_otr_size*(15-j))];
-            a[((im_otr_size-j-1)*im_otr_size)] = b[((im_otr_size-16+j)*(im_otr_size))];
+            a[(j*im_otr_width)] = b[(im_otr_width*(15-j))];
+            a[((im_otr_height-j-1)*im_otr_width)] = b[((im_otr_height-16+j)*(im_otr_width))];
         }
     }
 
     for(int i = 0; i < 8; i++)
     {
         float *a = im_otr + i;
-        float *a2 = im_otr + im_otr_size - i - 1;
+        float *a2 = im_otr + im_otr_width - i - 1;
         float *b = im_otr + 15 - i;
-        float *c = im_otr + im_otr_size - 16 + i;
-        for(int j = 0; j < im_otr_size; j++)
+        float *c = im_otr + im_otr_width - 16 + i;
+        for(int j = 0; j < im_otr_height; j++)
         {
-            a[im_otr_size*j] = b[im_otr_size*j];
-            a2[im_otr_size*j] = c[im_otr_size*j];
+            a[im_otr_width*j] = b[im_otr_width*j];
+            a2[im_otr_width*j] = c[im_otr_width*j];
         }
     }
 
-    for(int i = 0; i < im_otr_size*im_otr_size; i++)
+    for(int i = 0; i < im_otr_width*im_otr_height; i++)
     {
         Buff[i] = im_otr[i]/32;
         weig[i] = (float)1/32;
     }
 
     int AV_stride = 8*8;
-    int ss1 = im_otr_size-8;
-    int ss2 = im_otr_size-8;
-    float* AV = new float[im_otr_size * im_otr_size * AV_stride];
+    int ss1 = im_otr_width-8;
+    int ss2 = im_otr_height-8;
+    float* AV = new float[im_otr_width * im_otr_height * AV_stride];
 
     float* AV_pointer = AV;
     float* DCT_creator_mtx = &DCT_Creator8[0][0];
@@ -148,7 +148,7 @@ uint8_t* BM3D(uint8_t* image_, int width_, int height_)
 
     for (int i = 0; i < ss1; i++) {
         for (int j = 0; j < ss2; j++) {
-            getImageBlock(im_otr, i, j, im_otr_size, 8, block); // get block from image
+            getImageBlock(im_otr, i, j, im_otr_width, 8, block); // get block from image
             MultiplyMatrix(DCT_creator_mtx, block, temp, 8);
             MultiplyMatrix(temp, DCT_creator_mtx_T, block, 8);   // D*A*D'
 
@@ -412,9 +412,9 @@ uint8_t* BM3D(uint8_t* image_, int width_, int height_)
 */
                     for(int ii_b = i_in, i_b = 0; ii_b < 8; ii_b++, i_b++)
                     {
-                        S_pointer = Buff + ii_b*im_otr_size;
+                        S_pointer = Buff + ii_b*im_otr_width;
                         minVal_pointer = i_b*8;
-                        two_mtx_pointer = weig + ii_b*im_otr_size;
+                        two_mtx_pointer = weig + ii_b*im_otr_width;
                         for(int jj_b = j_in, j_b = 0; jj_b < 8; jj_b++, j_b++)
                         {
                             S_pointer[jj_b] += max(min(temp_RDCT[minVal_pointer+j_b], 1), 0)*win[minVal_pointer+j_b];
@@ -435,12 +435,12 @@ uint8_t* BM3D(uint8_t* image_, int width_, int height_)
         }
     }
 
-    uint8_t* im_res = new uint8_t[im_size*im_size];
-    int st = 8*im_otr_size+8;
-    for(int ll = 0; ll < im_size; ll++)
-        for(int ff = 0; ff < im_size; ff++)
-            im_res[ll*im_size+ff] = (Buff[st+ll*im_otr_size+ff] / weig[st+ll*im_otr_size+ff])*255;
-            //im_res[ll*im_size+ff] = im_otr[st+ll*im_otr_size+ff]*255;
+    uint8_t* im_res = new uint8_t[width_*height_];
+    int st = 8*im_otr_width+8;
+    for(int ll = 0; ll < height_; ll++)
+        for(int ff = 0; ff < width_; ff++)
+            im_res[ll*width_+ff] = (Buff[st+ll*im_otr_width+ff] / weig[st+ll*im_otr_width+ff])*255;
+            //im_res[ll*width_+ff] = im_otr[st+ll*im_otr_size+ff]*255;
         //im_res[ll] = (Buff[st+ll] / weig[st+ll])*255;
     unsigned int finish = clock();
     float time = ((float)(finish-start)/CLOCKS_PER_SEC);
@@ -451,7 +451,7 @@ uint8_t* BM3D(uint8_t* image_, int width_, int height_)
     {
         for(int ff = 0; ff < 16; ff++)
         {
-            printf("%i ", im_res[ll*im_size+ff]);
+            printf("%i ", im_res[ll*width_+ff]);
         }
         printf("\n");
     }
